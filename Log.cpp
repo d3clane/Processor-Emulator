@@ -12,31 +12,10 @@
 static int LOG_FILE;
 
 static inline void PrintSeparator();
-
 static void LogClose();
 
-static inline size_t Min(size_t a, size_t b)
-{
-    return a < b ? a : b;
-}
-
-static int TryOpenFile(const char* name)
-{
-    char* newString = strdup(name);
-    char* fileName  = strcat(newString, ".log.html");
-
-    LOG_FILE = open(fileName, O_WRONLY | O_APPEND);
-
-    if (LOG_FILE == -1)
-    {
-        creat(fileName, 0666);
-        LOG_FILE = open(fileName, O_WRONLY | O_APPEND);
-    }
-    
-    free(newString);
-
-    return LOG_FILE;
-}
+static inline size_t Min(size_t a, size_t b);
+static int TryOpenFile(const char* name);
 
 void LogOpen(const char* argv0)
 {
@@ -145,4 +124,27 @@ void LogEnd(const char* fileName, const char* funcName, const int line)
 static inline void PrintSeparator()
 {
     Log("\n\n---------------------------------------------------------------------------\n\n");
+}
+
+static inline size_t Min(size_t a, size_t b)
+{
+    return a < b ? a : b;
+}
+
+static int TryOpenFile(const char* name)
+{
+    char* newString = strdup(name);
+    char* fileName  = strcat(newString, ".log.html");
+
+    LOG_FILE = open(fileName, O_WRONLY | O_APPEND);
+
+    if (LOG_FILE == -1)
+    {
+        creat(fileName, 0666);
+        LOG_FILE = open(fileName, O_WRONLY | O_APPEND);
+    }
+    
+    free(newString);
+
+    return LOG_FILE;
 }
