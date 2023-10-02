@@ -1,0 +1,24 @@
+#ifndef PROCESSOR_H
+#define PORCESSOR_H
+
+enum class ProcessorErrors
+{
+    NO_ERR,
+
+    STACK_MEMORY_ALLOCATION_ERROR,
+    STACK_EMPTY_ERR, 
+    STACK_IS_NULLPTR,
+    STACK_CAPACITY_OUT_OF_RANGE,
+    STACK_SIZE_OUT_OF_RANGE,
+    STACK_INVALID_CANARY, 
+    STACK_INVALID_DATA_HASH,
+    STACK_INVALID_STRUCT_HASH,
+
+    TRYING_TO_DIVIDE_ON_ZERO,
+    
+
+};
+
+void Processing();
+
+#endif
