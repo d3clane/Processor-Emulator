@@ -10,14 +10,6 @@ struct ProcessorType
     //TODO: докинуть файл с байт кодом
 };
 
-static const char* PUSH   = "push";
-static const char* DIV    =  "div";
-static const char* MUL    =  "mul";
-static const char* SUB    =  "sub";
-static const char* ADD    =  "add";
-static const char* OUT    =  "out";
-static const char* HLT    =  "hlt";
-
 static void GetTwoLastValuesFromStack(StackType* stk, ElemType* firstVal, ElemType* secondVal)
 {
     assert(stk);
@@ -117,6 +109,14 @@ static void PrintResult(StackType* stk)
 void Processing(FILE* inStream)
 {
     assert(inStream);
+
+    static const char* PUSH   = "push";
+    static const char* DIV    =  "div";
+    static const char* MUL    =  "mul";
+    static const char* SUB    =  "sub";
+    static const char* ADD    =  "add";
+    static const char* OUT    =  "out";
+    static const char* HLT    =  "hlt";
 
     static const size_t maxCommandLength  =  5;
     static char command[maxCommandLength] = "";
