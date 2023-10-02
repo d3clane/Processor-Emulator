@@ -21,5 +21,4 @@ enum class Commands
     HLT,
 };
 
-
 #endif
