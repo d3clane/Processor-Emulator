@@ -1,6 +1,8 @@
 #ifndef PROCESSOR_H
 #define PORCESSOR_H
 
+#include <stdio.h>
+
 enum class ProcessorErrors
 {
     NO_ERR,
@@ -15,10 +17,8 @@ enum class ProcessorErrors
     STACK_INVALID_STRUCT_HASH,
 
     TRYING_TO_DIVIDE_ON_ZERO,
-    
-
 };
 
-void Processing();
+void Processing(FILE* inStream = stdin);
 
 #endif

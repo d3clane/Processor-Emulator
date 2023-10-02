@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <assert.h>
 #include <string.h>
 
 #include "Processor.h"
@@ -50,7 +50,7 @@ static void Divide(StackType* stk)
     ElemType firstValue  = POISON;
 
     GetTwoLastValuesFromStack(stk, &firstValue, &secondValue);
-    
+
     //Мб пихнуть проверку isfinite
     if (Equal(&firstValue, &POISON) || Equal(&secondValue, &POISON))
     {
@@ -114,8 +114,10 @@ static void PrintResult(StackType* stk)
     printf("Equation result: " ElemTypeFormat "\n", equationResult);
 }
 
-void Processing()
+void Processing(FILE* inStream)
 {
+    assert(inStream);
+
     static const size_t maxCommandLength  =  5;
     static char command[maxCommandLength] = "";
     
@@ -124,7 +126,7 @@ void Processing()
 
     while (true)
     {
-        int scanfResult = scanf("%s", command);
+        int scanfResult = fscanf(inStream, "%s", command);
         if (scanfResult == 0)
             return;
         
