@@ -18,9 +18,9 @@ TARGET = assembly
 OBJECTDIR = build
 DOXYFILE = Others/Doxyfile
 
-HEADERS  = assembly.h
+HEADERS  = Assembly.h
 
-FILESCPP = assembly.cpp main.cpp
+FILESCPP = Assembly.cpp main.cpp
 
 objects = $(FILESCPP:%.cpp=$(OBJECTDIR)/%.o)
 
