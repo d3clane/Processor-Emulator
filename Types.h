@@ -9,11 +9,11 @@
 #include <stdio.h>
 
 /// @brief ElemType for stack
-typedef float ElemType;
+typedef double ElemType;
 
 /// @brief Format for printing ElemType
 #undef  ElemTypeFormat
-#define ElemTypeFormat "%f"
+#define ElemTypeFormat "%lf"
 
 /// @brief Chosen POISON value for stack
 static const ElemType POISON = NAN;
@@ -37,7 +37,7 @@ static inline bool Equal(const ElemType* const a, const ElemType* const b)
         return false;
     }
     
-    static const ElemType EPS = (ElemType) 1e-7;
+    static const ElemType EPS = 1e-7;
 
     return fabs(*a - *b) < EPS;
 }
