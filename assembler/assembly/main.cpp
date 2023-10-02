@@ -2,10 +2,21 @@
 
 #include "assembly.h"
 
-int main(const int argc, const char* argv[]) //TODO: argv file in file out
+//docs - first command arg - in, second - out
+int main(const int argc, const char* argv[])
 {
-    FILE* in = fopen("in.txt", "r");
-    FILE* out = fopen("out.txt", "w");
+    FILE* in  = nullptr;
+    FILE* out = nullptr;
+
+    if (argc > 1)
+        in = fopen(argv[1], "r");
+    else
+        in = fopen("in.txt", "r");
+
+    if (argc > 2)
+        out = fopen(argv[2], "w");
+    else
+        out = fopen("out.txt", "w");
 
     Assembly(in, out);
 }
