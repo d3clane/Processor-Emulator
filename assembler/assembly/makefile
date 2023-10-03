@@ -18,9 +18,9 @@ TARGET = ../../$(PROGRAMDIR)/assembly
 OBJECTDIR = build
 DOXYFILE = Others/Doxyfile
 
-HEADERS  = Assembly.h
+HEADERS  = Assembly.h ../../Log.h ../Commands.h
 
-FILESCPP = Assembly.cpp main.cpp
+FILESCPP = Assembly.cpp main.cpp ../../Log.cpp
 
 objects = $(FILESCPP:%.cpp=$(OBJECTDIR)/%.o)
 
@@ -39,6 +39,7 @@ docs:
 
 clean:
 	rm -rf $(OBJECTDIR)/*.o
+	rm -rf *.o
 
 buildDirs:
 	mkdir $(OBJECTDIR)
