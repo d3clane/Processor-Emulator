@@ -2,7 +2,8 @@
 #define ASSEMBLER_H
 
 #include <stdio.h>
+#include "../Commands.h"
 
-void Disassembly(FILE* inStream, FILE* outStream);
+CommandsErrors Disassembly(FILE* inStream, FILE* outStream);
 
 #endif

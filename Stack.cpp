@@ -599,7 +599,7 @@ static inline size_t StackGetSizeForCalloc(StackType* const stk)
 #undef GetFirstCanaryAdr
 #undef GetSecondCanaryAdr
 
-#define PRINT_ERR(X) Log(HTML_RED_HEAD_BEGIN "\n" X "\n" HTML_HEAD_END "\n")
+#define LOG_ERR(X) Log(HTML_RED_HEAD_BEGIN "\n" X "\n" HTML_HEAD_END "\n")
 void StackPrintError(StackErrors error)
 {
     LOG_BEGIN();
@@ -607,28 +607,28 @@ void StackPrintError(StackErrors error)
     switch(error)
     {
         case StackErrors::STACK_CAPACITY_OUT_OF_RANGE:
-            PRINT_ERR("Stack capacity is out of range.\n");
+            LOG_ERR("Stack capacity is out of range.\n");
             break;
         case StackErrors::STACK_IS_NULLPTR:
-            PRINT_ERR("Stack is nullptr.\n");
+            LOG_ERR("Stack is nullptr.\n");
             break;
         case StackErrors::STACK_EMPTY_ERR:
-            PRINT_ERR("Trying to pop from empty stack.\n");
+            LOG_ERR("Trying to pop from empty stack.\n");
             break;
         case StackErrors::STACK_SIZE_OUT_OF_RANGE:
-            PRINT_ERR("Stack size is out of range.\n");
+            LOG_ERR("Stack size is out of range.\n");
             break;
         case StackErrors::STACK_MEMORY_ALLOCATION_ERROR:
-            PRINT_ERR("Couldn't allocate more memory for stack.\n");
+            LOG_ERR("Couldn't allocate more memory for stack.\n");
             break;
         case StackErrors::STACK_INVALID_CANARY:
-            PRINT_ERR("Stack canary is invalid.\n");
+            LOG_ERR("Stack canary is invalid.\n");
             break;
         case StackErrors::STACK_INVALID_DATA_HASH:
-            PRINT_ERR("Stack data hash is invalid.\n");
+            LOG_ERR("Stack data hash is invalid.\n");
             break;
         case StackErrors::STACK_INVALID_STRUCT_HASH:
-            PRINT_ERR("Stack struct hash is invalid.\n");
+            LOG_ERR("Stack struct hash is invalid.\n");
 
         case StackErrors::STACK_NO_ERR:
         default:

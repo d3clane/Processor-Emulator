@@ -1,3 +1,5 @@
+#include <assert.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -49,14 +51,14 @@ static ErrorInfoType ErrorInfo =
 
 #endif
 
-void PrintError()
+void LogStardardErrors()
 {
     LOG_BEGIN();
 
     switch(ErrorInfo.error)
     {
         case Errors::MEMORY_ALLOCATION_ERR:
-            PRINT_ERR("Memory allocation error.\n");
+            LOG_ERR("Memory allocation error.\n");
             break;
 
         case Errors::NO_ERR:
@@ -66,6 +68,23 @@ void PrintError()
 
     LOG_END();
 }
+
+/*void LogError(const char* format, const char* fileName, const char* funcName, const int lineNumber, ...)
+{
+    assert(format);
+    assert(fileName);
+    assert(funcName);
+    assert(lineNumber);
+
+    va_list args = {};
+
+    va_start(args, format);
+
+    Log()
+    vfprintf()
+
+    va_end(args);
+}*/
 
 bool HasError()
 {

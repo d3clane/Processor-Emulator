@@ -2,11 +2,11 @@
 #include <string.h>
 
 #include "Assembly.h"
-#include "../Commands.h"
+#include "../../Log.h"
 
 static inline void CopyLine(FILE* inStream, FILE* outStream);
 
-void Assembly(FILE* inStream, FILE* outStream)
+CommandsErrors Assembly(FILE* inStream, FILE* outStream)
 {
     assert(inStream);
     assert(outStream);
@@ -39,11 +39,16 @@ void Assembly(FILE* inStream, FILE* outStream)
             break;  
         }
         else
-            return; 
-            //TODO: мб какой-то обработчик того, что в файле лежит говно, какую-нибудь ошибку возвращать
-    
+        {
+            //TODO: надо чтобы он выводил строчку, откуда call произошел (просто макрос нацепить)
+            CommandsErrorsLogError(CommandsErrors::INVALID_COMMAND_STRING);
+                            return CommandsErrors::INVALID_COMMAND_STRING;
+        }
+
         CopyLine(inStream, outStream);
     }
+
+    return CommandsErrors::NO_ERR;
 }
 
 static inline void CopyLine(FILE* inStream, FILE* outStream)

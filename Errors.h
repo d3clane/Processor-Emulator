@@ -55,7 +55,9 @@ struct ErrorInfoType
     /// \details copyLineNumber __LINE__ define at the moment macros is valled
     /// \param [in]ERROR Errors enum with error occurred in program
     #define UPDATE_ERR(ERROR) UpdateError((ERROR), __FILE__, __func__, __LINE__)
-    
+
+    #define LOG_ERR(X) Log(HTML_RED_HEAD_BEGIN "\n" X "\n" HTML_HEAD_END "\n")
+
 #else
 
     void UpdateError(Errors error);
@@ -70,7 +72,7 @@ struct ErrorInfoType
 do                                                                    \
 {                                                                     \
     UPDATE_ERR(ERROR);                                                \
-    PrintError();                                                     \
+    LogStardardErrors();                                                     \
 } while (0)
 
 
@@ -78,9 +80,11 @@ do                                                                    \
 
 /// \brief print errors from special struct with errors errorInfo.
 /// \attention errorInfo have to be updated only with UPDATE_ERR();
-void PrintError();
+void LogStardardErrors();
 
 //-----------------------------------------------------------------------------------------------
+
+void LogError(const char* format, const char* fileName, const char* funcName, const int lineNumber, ...);
 
 /// @brief checks if the error in ErrorInfo is fatal.
 /// @returns true if error is fatal and have to leave the program, otherwise false

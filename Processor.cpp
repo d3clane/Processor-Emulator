@@ -8,27 +8,38 @@
 struct ProcessorType
 {
     StackType stack;
+    FILE* byteCode;
     //TODO: докинуть файл с байт кодом
 };
 
-static void Push(StackType* stk, FILE* inStream);
-static void In(StackType* stk);
+static void ProcessorCtor(ProcessorType* processor, FILE* inStream)
+{
+    assert(processor);
+    assert(inStream);
 
-static void Divide(StackType* stk);
-static void Multiply(StackType* stk);
-static void Subtract(StackType* stk);
-static void Add(StackType* stk);
+    StackCtor(&processor->stack);
+    processor->byteCode = inStream;
+}
 
-static void PrintResult(StackType* stk);
+static void Push(ProcessorType* processor);
+static void In(ProcessorType* processor);
 
-static void GetTwoLastValuesFromStack(StackType* stk, ElemType* firstVal, ElemType* secondVal);
+static void Divide(ProcessorType* processor);
+static void Multiply(ProcessorType* processor);
+static void Subtract(ProcessorType* processor);
+static void Add(ProcessorType* processor);
+
+static void PrintResult(ProcessorType* processor);
+
+static void GetTwoLastValuesFromStack(StackType* stack, ElemType* firstVal, ElemType* secondVal);
 
 void Processing(FILE* inStream)
 {
     assert(inStream);
 
-    StackType stk = {};
-    StackCtor(&stk);
+
+    ProcessorType processor = {};
+    ProcessorCtor(&processor, inStream);
 
     int command = -1;
     
@@ -39,62 +50,71 @@ void Processing(FILE* inStream)
         switch((Commands) command)
         {
             case Commands::PUSH_ID:
-                Push(&stk, inStream);
+                Push(&processor);
                 break;
             case Commands::IN_ID:
-                In(&stk);
+                In(&processor);
                 break;
             case Commands::DIV_ID:
-                Divide(&stk);
+                Divide(&processor);
                 break;
             case Commands::ADD_ID:
-                Add(&stk);
+                Add(&processor);
                 break;
             case Commands::SUB_ID:
-                Subtract(&stk);
+                Subtract(&processor);
                 break;
             case Commands::MUL_ID:
-                Multiply(&stk);
+                Multiply(&processor);
                 break;
             case Commands::OUT_ID:
-                PrintResult(&stk);
+                PrintResult(&processor);
                 break;
             case Commands::HLT_ID:
                 return;
             default:
                 return; //TODO: error handler
-            
         }
     }
 }
 
-static void Push(StackType* stk, FILE* inStream)
+static void Push(ProcessorType* processor)
 {
-    assert(stk);
-    assert(inStream);
+    assert(processor);
+    assert(processor->byteCode);
 
     ElemType valueToPush = 0;
-    int scanfResult = fscanf(inStream, ElemTypeFormat, &valueToPush);
+    int scanfResult = fscanf(processor->byteCode, ElemTypeFormat, &valueToPush);
 
     if (scanfResult != 1)
         return;
     
-    StackPush(stk, valueToPush); //как проверить ваще чет не выкупаю
+    StackPush(&processor->stack, valueToPush); //проверить
 }
 
-static void In(StackType* stk)
+static void In(ProcessorType* processor)
 {
-    Push(stk, stdin);
+    
+    assert(processor);
+    assert(processor->byteCode);
+
+    ElemType valueToPush = 0;
+    int scanfResult = scanf(ElemTypeFormat, &valueToPush);
+
+    if (scanfResult != 1)
+        return;
+    
+    StackPush(&processor->stack, valueToPush); //проверить
 }
 
-static void Divide(StackType* stk)
+static void Divide(ProcessorType* processor)
 {
-    assert(stk);
+    assert(processor);
 
     ElemType secondValue = POISON;
     ElemType firstValue  = POISON;
 
-    GetTwoLastValuesFromStack(stk, &firstValue, &secondValue);
+    GetTwoLastValuesFromStack(&processor->stack, &firstValue, &secondValue);
 
     //Мб пихнуть проверку isfinite
     if (Equal(&firstValue, &POISON) || Equal(&secondValue, &POISON))
@@ -105,67 +125,69 @@ static void Divide(StackType* stk)
     const ElemType Zero = 0; //TODO: что-то точно надо сделать с этим
     if (!Equal(&secondValue, &Zero))
     {        
-        StackPush(stk, firstValue / secondValue); //TODO: тоже проверку бы что все прошло нормально
+        StackPush(&processor->stack, firstValue / secondValue); //TODO: тоже проверку бы что все прошло нормально
         return;
     }
 
-    StackPush(stk, Zero); //если делить на ноль нельзя - хотя стоит мб обработать адекватней
+    StackPush(&processor->stack, Zero); //если делить на ноль нельзя - хотя стоит мб обработать адекватней
     return; //TODO: ретерн ошибки
 }
 
-static void Multiply(StackType* stk)
+static void Multiply(ProcessorType* processor)
 {
-    assert(stk);
+    assert(processor);
 
     ElemType secondValue = POISON;
     ElemType firstValue  = POISON;
 
-    GetTwoLastValuesFromStack(stk, &firstValue, &secondValue);
+    GetTwoLastValuesFromStack(&processor->stack, &firstValue, &secondValue);
 
-    StackPush(stk, firstValue * secondValue); //TODO: ретерн на ошибке, проверка адекватности умножения
+    StackPush(&processor->stack, firstValue * secondValue); //TODO: ретерн на ошибке, проверка адекватности умножения
 }
 
-static void Subtract(StackType* stk)
+static void Subtract(ProcessorType* processor)
 {
-    assert(stk);
+    assert(processor);
 
     ElemType secondValue = POISON;
     ElemType firstValue  = POISON;
 
-    GetTwoLastValuesFromStack(stk, &firstValue, &secondValue);
+    GetTwoLastValuesFromStack(&processor->stack, &firstValue, &secondValue);
 
-    StackPush(stk, firstValue - secondValue); //TODO: 
+    StackPush(&processor->stack, firstValue - secondValue); //TODO: 
 }
 
-static void Add(StackType* stk)
+static void Add(ProcessorType* processor)
 {
-    assert(stk);
+    assert(processor);
 
     ElemType secondValue = POISON;
     ElemType firstValue  = POISON;
 
-    GetTwoLastValuesFromStack(stk, &firstValue, &secondValue);
+    GetTwoLastValuesFromStack(&processor->stack, &firstValue, &secondValue);
 
-    StackPush(stk, firstValue + secondValue); //TODO: 
+    StackPush(&processor->stack, firstValue + secondValue); //TODO: 
 }
 
-static void PrintResult(StackType* stk)
+static void PrintResult(ProcessorType* processor)
 {
-    assert(stk);
+    assert(processor);
 
     ElemType equationResult = POISON;
-    StackPop(stk, &equationResult);
+    StackPop(&processor->stack, &equationResult);
 
     printf("Equation result: " ElemTypeFormat "\n", equationResult);
+
+    StackPush(&processor->stack, equationResult); 
 }
 
-static void GetTwoLastValuesFromStack(StackType* stk, ElemType* firstVal, ElemType* secondVal)
+static void GetTwoLastValuesFromStack(StackType* stack, ElemType* firstVal, ElemType* secondVal)
 {
-    assert(stk);
+    assert(stack);
     assert(firstVal);
     assert(secondVal);
 
-    StackPop(stk, secondVal);
-    StackPop(stk, firstVal);
+    StackPop(stack, secondVal);
+    StackPop(stack, firstVal);
     //TODO: ретерн в случае ошибки
 }

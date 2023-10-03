@@ -2,11 +2,10 @@
 #include <string.h>
 
 #include "Disassembly.h"
-#include "../Commands.h"
 
 static inline void CopyLine(FILE* inStream, FILE* outStream);
 
-void Disassembly(FILE* inStream, FILE* outStream)
+CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
 {
     assert(inStream);
     assert(outStream);
@@ -42,14 +41,16 @@ void Disassembly(FILE* inStream, FILE* outStream)
                 break;
             case Commands::HLT_ID:
                 fprintf(outStream, HLT);
-                return;
+                return CommandsErrors::NO_ERR;
             default:
-                return; //TODO: error handler
-            
+                CommandsErrorsLogError(CommandsErrors::INVALID_COMMAND_ID);
+                                return CommandsErrors::INVALID_COMMAND_ID;
         }
 
         CopyLine(inStream, outStream);
     }
+
+    return CommandsErrors::NO_ERR;
 }
 
 static inline void CopyLine(FILE* inStream, FILE* outStream)
