@@ -10,7 +10,6 @@ enum class CommandsErrors
 
     INVALID_COMMAND_STRING,
     INVALID_COMMAND_ID,
-
 };
 
 //TODO подумать че сделать с этими константами
@@ -49,7 +48,7 @@ inline void CommandsErrorsLogError(CommandsErrors error)
     {
         case CommandsErrors::NO_ERR:
             break;
-            
+
         case CommandsErrors::INVALID_COMMAND_ID:
             LOG_ERR("Invalid command id in byte-code file.\n");
             break;
