@@ -6,6 +6,10 @@
 #include "Stack.h"
 #include "assembler/Commands.h"
 
+//TODO: пусть на возврате ошибок все принтится в лог файл(такую функцию запилить надо бы и все) 
+//Просто функция принтов ошибок как в ассемблере и дизассемблере сделана 
+//+ доделать, чтобы выводилась именно строчка, откуда call был функции на вывод ошибки(ну макрос лепануть хз)
+
 struct ProcessorType
 {
     StackType stack;
@@ -69,7 +73,7 @@ ProcessorErrors Processing(FILE* inStream)
             case Commands::HLT_ID:
                 return ProcessorErrors::NO_ERR;
             default:
-                return ProcessorErrors::INVALID_COMMAND; //TODO: error handler
+                return ProcessorErrors::INVALID_COMMAND;
         }
 
         if (processorError != ProcessorErrors::NO_ERR)
