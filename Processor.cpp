@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "Processor.h"
 #include "Stack.h"
@@ -9,34 +10,27 @@ struct ProcessorType
 {
     StackType stack;
     FILE* byteCode;
-    //TODO: докинуть файл с байт кодом
 };
 
-static void ProcessorCtor(ProcessorType* processor, FILE* inStream)
-{
-    assert(processor);
-    assert(inStream);
+static ProcessorErrors ProcessorCtor(ProcessorType* processor, FILE* inStream);
 
-    StackCtor(&processor->stack);
-    processor->byteCode = inStream;
-}
+static ProcessorErrors CommandPush(ProcessorType* processor);
+static ProcessorErrors CommandIn(ProcessorType* processor);
 
-static void Push(ProcessorType* processor);
-static void In(ProcessorType* processor);
+static ProcessorErrors CommandDiv(ProcessorType* processor);
+static ProcessorErrors CommandMul(ProcessorType* processor);
+static ProcessorErrors CommandSub(ProcessorType* processor);
+static ProcessorErrors CommandAdd(ProcessorType* processor);
 
-static void Divide(ProcessorType* processor);
-static void Multiply(ProcessorType* processor);
-static void Subtract(ProcessorType* processor);
-static void Add(ProcessorType* processor);
+static ProcessorErrors CommandOut(ProcessorType* processor);
 
-static void PrintResult(ProcessorType* processor);
+static ProcessorErrors GetTwoLastValuesFromStack(StackType* stack, ElemType* firstVal, ElemType* secondVal);
 
-static void GetTwoLastValuesFromStack(StackType* stack, ElemType* firstVal, ElemType* secondVal);
+static inline bool IsValidValues(const ElemType* firstVal, const ElemType* secondVal);
 
-void Processing(FILE* inStream)
+ProcessorErrors Processing(FILE* inStream)
 {
     assert(inStream);
-
 
     ProcessorType processor = {};
     ProcessorCtor(&processor, inStream);
@@ -47,38 +41,50 @@ void Processing(FILE* inStream)
     {
         fscanf(inStream, "%d", &command);
 
+        ProcessorErrors processorError = ProcessorErrors::NO_ERR;
+
         switch((Commands) command)
         {
             case Commands::PUSH_ID:
-                Push(&processor);
+                processorError = CommandPush(&processor);
                 break;
             case Commands::IN_ID:
-                In(&processor);
+                processorError = CommandIn(&processor);
                 break;
             case Commands::DIV_ID:
-                Divide(&processor);
+                processorError = CommandDiv(&processor);
                 break;
             case Commands::ADD_ID:
-                Add(&processor);
+                processorError = CommandAdd(&processor);
                 break;
             case Commands::SUB_ID:
-                Subtract(&processor);
+                processorError = CommandSub(&processor);
                 break;
             case Commands::MUL_ID:
-                Multiply(&processor);
+                processorError = CommandMul(&processor);
                 break;
             case Commands::OUT_ID:
-                PrintResult(&processor);
+                processorError = CommandOut(&processor);
                 break;
             case Commands::HLT_ID:
-                return;
+                return ProcessorErrors::NO_ERR;
             default:
-                return; //TODO: error handler
+                return ProcessorErrors::INVALID_COMMAND; //TODO: error handler
         }
+
+        if (processorError != ProcessorErrors::NO_ERR)
+            return processorError;
     }
 }
 
-static void Push(ProcessorType* processor)
+#define RETURN_STACK_PUSH_ERR(PROCESSOR, VALUE_TO_PUSH)                           \
+do                                                                                \
+{                                                                                 \
+    StackErrorsType stackErr = StackPush(&(PROCESSOR)->stack, VALUE_TO_PUSH);     \
+    return stackErr ? ProcessorErrors::STACK_ERR : ProcessorErrors::NO_ERR;       \
+} while (0)
+
+static ProcessorErrors CommandPush(ProcessorType* processor)
 {
     assert(processor);
     assert(processor->byteCode);
@@ -87,14 +93,13 @@ static void Push(ProcessorType* processor)
     int scanfResult = fscanf(processor->byteCode, ElemTypeFormat, &valueToPush);
 
     if (scanfResult != 1)
-        return;
+        return ProcessorErrors::READING_FROM_FILE_ERROR;
     
-    StackPush(&processor->stack, valueToPush); //проверить
+    RETURN_STACK_PUSH_ERR(processor, valueToPush);
 }
 
-static void In(ProcessorType* processor)
+static ProcessorErrors CommandIn(ProcessorType* processor)
 {
-    
     assert(processor);
     assert(processor->byteCode);
 
@@ -102,92 +107,143 @@ static void In(ProcessorType* processor)
     int scanfResult = scanf(ElemTypeFormat, &valueToPush);
 
     if (scanfResult != 1)
-        return;
+        return ProcessorErrors::READING_FROM_FILE_ERROR;;
     
-    StackPush(&processor->stack, valueToPush); //проверить
+    RETURN_STACK_PUSH_ERR(processor, valueToPush);
 }
 
-static void Divide(ProcessorType* processor)
+#define VALUES_CHECK(FIRST_VALUE, SECOND_VALUE)                             \
+do                                                                          \
+{                                                                           \
+    if (!IsValidValues(&(FIRST_VALUE), &(SECOND_VALUE)))                    \
+    {                                                                       \
+        return ProcessorErrors::VALUES_COULD_NOT_BE_USED_FOR_ARITHMETIC;    \
+    }                                                                       \
+} while (0)
+
+static ProcessorErrors CommandDiv(ProcessorType* processor)
 {
     assert(processor);
 
     ElemType secondValue = POISON;
     ElemType firstValue  = POISON;
 
-    GetTwoLastValuesFromStack(&processor->stack, &firstValue, &secondValue);
+    ProcessorErrors errors = GetTwoLastValuesFromStack(&processor->stack, &firstValue, &secondValue);
 
-    //Мб пихнуть проверку isfinite
-    if (Equal(&firstValue, &POISON) || Equal(&secondValue, &POISON))
-    {
-        return; //TODO: ретерн ошибки что какая-то фигня хранится 
-    }
+    if (errors != ProcessorErrors::NO_ERR)
+        return errors;
+    
+    VALUES_CHECK(firstValue, secondValue);
 
-    const ElemType Zero = 0; //TODO: что-то точно надо сделать с этим
+    const ElemType Zero = 0; //хз как-то некрасиво выглядит
     if (!Equal(&secondValue, &Zero))
     {        
-        StackPush(&processor->stack, firstValue / secondValue); //TODO: тоже проверку бы что все прошло нормально
-        return;
+        RETURN_STACK_PUSH_ERR(processor, firstValue / secondValue);
     }
 
-    StackPush(&processor->stack, Zero); //если делить на ноль нельзя - хотя стоит мб обработать адекватней
-    return; //TODO: ретерн ошибки
+    RETURN_STACK_PUSH_ERR(processor, INFINITY);
 }
 
-static void Multiply(ProcessorType* processor)
+static ProcessorErrors CommandMul(ProcessorType* processor)
 {
     assert(processor);
 
     ElemType secondValue = POISON;
     ElemType firstValue  = POISON;
 
-    GetTwoLastValuesFromStack(&processor->stack, &firstValue, &secondValue);
+    ProcessorErrors errors = GetTwoLastValuesFromStack(&processor->stack, &firstValue, &secondValue);
 
-    StackPush(&processor->stack, firstValue * secondValue); //TODO: ретерн на ошибке, проверка адекватности умножения
+    if (errors != ProcessorErrors::NO_ERR)
+        return errors;
+
+    VALUES_CHECK(firstValue, secondValue);
+
+    RETURN_STACK_PUSH_ERR(processor, firstValue * secondValue);
 }
 
-static void Subtract(ProcessorType* processor)
+static ProcessorErrors CommandSub(ProcessorType* processor)
 {
     assert(processor);
 
     ElemType secondValue = POISON;
     ElemType firstValue  = POISON;
 
-    GetTwoLastValuesFromStack(&processor->stack, &firstValue, &secondValue);
+    ProcessorErrors errors = GetTwoLastValuesFromStack(&processor->stack, &firstValue, &secondValue);
 
-    StackPush(&processor->stack, firstValue - secondValue); //TODO: 
+    if (errors != ProcessorErrors::NO_ERR)
+        return errors;
+
+    VALUES_CHECK(firstValue, secondValue);
+
+    RETURN_STACK_PUSH_ERR(processor, firstValue - secondValue);
 }
 
-static void Add(ProcessorType* processor)
+static ProcessorErrors CommandAdd(ProcessorType* processor)
 {
     assert(processor);
 
     ElemType secondValue = POISON;
     ElemType firstValue  = POISON;
 
-    GetTwoLastValuesFromStack(&processor->stack, &firstValue, &secondValue);
+    ProcessorErrors errors = GetTwoLastValuesFromStack(&processor->stack, &firstValue, &secondValue);
 
-    StackPush(&processor->stack, firstValue + secondValue); //TODO: 
+    if (errors != ProcessorErrors::NO_ERR)
+        return errors;
+
+    VALUES_CHECK(firstValue, secondValue);
+
+    RETURN_STACK_PUSH_ERR(processor, firstValue + secondValue);
 }
 
-static void PrintResult(ProcessorType* processor)
+#undef VALUES_CHECK
+
+static ProcessorErrors CommandOut(ProcessorType* processor)
 {
     assert(processor);
 
     ElemType equationResult = POISON;
-    StackPop(&processor->stack, &equationResult);
+
+    StackErrorsType stackError = StackPop(&processor->stack, &equationResult);
+
+    if (stackError)
+    {
+        printf("Couldn't provide result. Getting result error occurred.\n");
+        return ProcessorErrors::STACK_ERR;
+    }
 
     printf("Equation result: " ElemTypeFormat "\n", equationResult);
 
-    StackPush(&processor->stack, equationResult); 
+    RETURN_STACK_PUSH_ERR(processor, equationResult);
 }
 
-static void GetTwoLastValuesFromStack(StackType* stack, ElemType* firstVal, ElemType* secondVal)
+#undef RETURN_STACK_PUSH_ERR
+
+static ProcessorErrors GetTwoLastValuesFromStack(StackType* stack, ElemType* firstVal, ElemType* secondVal)
 {
     assert(stack);
     assert(firstVal);
     assert(secondVal);
 
-    StackPop(stack, secondVal);
-    StackPop(stack, firstVal);
-    //TODO: ретерн в случае ошибки
+
+    StackErrorsType stackError = StackPop(stack, secondVal);
+    stackError = StackPop(stack, firstVal);
+    
+    return stackError ? ProcessorErrors::STACK_ERR : ProcessorErrors::NO_ERR;
+}
+
+static ProcessorErrors ProcessorCtor(ProcessorType* processor, FILE* inStream)
+{
+    assert(processor);
+    assert(inStream);
+
+    processor->byteCode = inStream;
+
+    StackErrorsType stackError = StackCtor(&processor->stack);
+
+    return stackError ? ProcessorErrors::STACK_ERR : ProcessorErrors::NO_ERR;
+}
+
+static inline bool IsValidValues(const ElemType* firstVal, const ElemType* secondVal)
+{
+    return IsValidValue(firstVal) && IsValidValue(secondVal);
 }

@@ -42,4 +42,9 @@ static inline bool Equal(const ElemType* const a, const ElemType* const b)
     return fabs(*a - *b) < EPS;
 }
 
+static inline bool IsValidValue(const ElemType* value)
+{
+    return isfinite(*value);
+}
+
 #endif // TYPES_H
