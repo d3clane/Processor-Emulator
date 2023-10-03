@@ -18,21 +18,24 @@ void Assembly(FILE* inStream, FILE* outStream)
     {
         fscanf(inStream, "%s", command);
         
-        if (strcmp(command, Push) == 0)
-            fprintf(outStream, "%d", (int) Commands::PUSH);
-        else if (strcmp(command, Div) == 0)
-            fprintf(outStream, "%d", (int) Commands::DIV);
-        else if (strcmp(command, Mul) == 0)
-            fprintf(outStream, "%d", (int) Commands::MUL);
-        else if (strcmp(command, Sub) == 0)
-            fprintf(outStream, "%d", (int) Commands::SUB);
-        else if (strcmp(command, Add) == 0)
-            fprintf(outStream, "%d", (int) Commands::ADD);
-        else if (strcmp(command, Out) == 0)
-            fprintf(outStream, "%d", (int) Commands::OUT);
-        else if (strcmp(command, Hlt) == 0)
+        //TODO: hashing
+        if (strcmp(command, PUSH) == 0)
+            fprintf(outStream, "%d", (int) Commands::PUSH_ID);
+        else if (strcmp(command, IN) == 0)
+            fprintf(outStream, "%d", (int) Commands::IN_ID);
+        else if (strcmp(command, DIV) == 0)
+            fprintf(outStream, "%d", (int) Commands::DIV_ID);
+        else if (strcmp(command, MUL) == 0)
+            fprintf(outStream, "%d", (int) Commands::MUL_ID);
+        else if (strcmp(command, SUB) == 0)
+            fprintf(outStream, "%d", (int) Commands::SUB_ID);
+        else if (strcmp(command, ADD) == 0)
+            fprintf(outStream, "%d", (int) Commands::ADD_ID);
+        else if (strcmp(command, OUT) == 0)
+            fprintf(outStream, "%d", (int) Commands::OUT_ID);
+        else if (strcmp(command, HLT) == 0)
         {
-            fprintf(outStream, "%d", (int) Commands::HLT);
+            fprintf(outStream, "%d", (int) Commands::HLT_ID);
             break;  
         }
         else

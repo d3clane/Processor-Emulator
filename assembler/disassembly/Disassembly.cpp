@@ -19,26 +19,29 @@ void Disassembly(FILE* inStream, FILE* outStream)
 
         switch((Commands) command)
         {
-            case Commands::PUSH:
-                fprintf(outStream, Push);
+            case Commands::PUSH_ID:
+                fprintf(outStream, PUSH);
                 break;
-            case Commands::DIV:
-                fprintf(outStream, Div);
+            case Commands::IN_ID:
+                fprintf(outStream, IN);
                 break;
-            case Commands::ADD:
-                fprintf(outStream, Add);
+            case Commands::DIV_ID:
+                fprintf(outStream, DIV);
                 break;
-            case Commands::SUB:
-                fprintf(outStream, Sub);
+            case Commands::ADD_ID:
+                fprintf(outStream, ADD);
                 break;
-            case Commands::MUL:
-                fprintf(outStream, Mul);
+            case Commands::SUB_ID:
+                fprintf(outStream, SUB);
                 break;
-            case Commands::OUT:
-                fprintf(outStream, Out);
+            case Commands::MUL_ID:
+                fprintf(outStream, MUL);
                 break;
-            case Commands::HLT:
-                fprintf(outStream, Hlt);
+            case Commands::OUT_ID:
+                fprintf(outStream, OUT);
+                break;
+            case Commands::HLT_ID:
+                fprintf(outStream, HLT);
                 return;
             default:
                 return; //TODO: error handler
