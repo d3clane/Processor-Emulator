@@ -3,6 +3,7 @@
 
 #include "Processor.h"
 #include "Stack.h"
+#include "assembler/Commands.h"
 
 struct ProcessorType
 {
@@ -10,28 +11,80 @@ struct ProcessorType
     //TODO: докинуть файл с байт кодом
 };
 
-static void GetTwoLastValuesFromStack(StackType* stk, ElemType* firstVal, ElemType* secondVal)
-{
-    assert(stk);
-    assert(firstVal);
-    assert(secondVal);
+static void Push(StackType* stk, FILE* inStream);
+static void In(StackType* stk);
 
-    StackPop(stk, secondVal);
-    StackPop(stk, firstVal);
-    //TODO: ретерн в случае ошибки
+static void Divide(StackType* stk);
+static void Multiply(StackType* stk);
+static void Subtract(StackType* stk);
+static void Add(StackType* stk);
+
+static void PrintResult(StackType* stk);
+
+static void GetTwoLastValuesFromStack(StackType* stk, ElemType* firstVal, ElemType* secondVal);
+
+void Processing(FILE* inStream)
+{
+    assert(inStream);
+
+    StackType stk = {};
+    StackCtor(&stk);
+
+    int command = -1;
+    
+    while (true)
+    {
+        fscanf(inStream, "%d", &command);
+
+        switch((Commands) command)
+        {
+            case Commands::PUSH_ID:
+                Push(&stk, inStream);
+                break;
+            case Commands::IN_ID:
+                In(&stk);
+                break;
+            case Commands::DIV_ID:
+                Divide(&stk);
+                break;
+            case Commands::ADD_ID:
+                Add(&stk);
+                break;
+            case Commands::SUB_ID:
+                Subtract(&stk);
+                break;
+            case Commands::MUL_ID:
+                Multiply(&stk);
+                break;
+            case Commands::OUT_ID:
+                PrintResult(&stk);
+                break;
+            case Commands::HLT_ID:
+                return;
+            default:
+                return; //TODO: error handler
+            
+        }
+    }
 }
 
-static void Push(StackType* stk)
+static void Push(StackType* stk, FILE* inStream)
 {
     assert(stk);
+    assert(inStream);
 
     ElemType valueToPush = 0;
-    int scanfResult = scanf(ElemTypeFormat, &valueToPush);
+    int scanfResult = fscanf(inStream, ElemTypeFormat, &valueToPush);
 
     if (scanfResult != 1)
         return;
     
     StackPush(stk, valueToPush); //как проверить ваще чет не выкупаю
+}
+
+static void In(StackType* stk)
+{
+    Push(stk, stdin);
 }
 
 static void Divide(StackType* stk)
@@ -106,45 +159,13 @@ static void PrintResult(StackType* stk)
     printf("Equation result: " ElemTypeFormat "\n", equationResult);
 }
 
-void Processing(FILE* inStream)
+static void GetTwoLastValuesFromStack(StackType* stk, ElemType* firstVal, ElemType* secondVal)
 {
-    assert(inStream);
+    assert(stk);
+    assert(firstVal);
+    assert(secondVal);
 
-    static const char* PUSH   = "push";
-    static const char* DIV    =  "div";
-    static const char* MUL    =  "mul";
-    static const char* SUB    =  "sub";
-    static const char* ADD    =  "add";
-    static const char* OUT    =  "out";
-    static const char* HLT    =  "hlt";
-
-    static const size_t maxCommandLength  =  5;
-    static char command[maxCommandLength] = "";
-    
-    StackType stk = {};
-    StackCtor(&stk);
-
-    while (true)
-    {
-        int scanfResult = fscanf(inStream, "%s", command);
-        if (scanfResult == 0)
-            return;
-        
-        if (strcmp(command, PUSH) == 0)
-            Push(&stk);
-        else if (strcmp(command, DIV) == 0)
-            Divide(&stk);
-        else if (strcmp(command, MUL) == 0)
-            Multiply(&stk);
-        else if (strcmp(command, SUB) == 0)
-            Subtract(&stk);
-        else if (strcmp(command, ADD) == 0)
-            Add(&stk);
-        else if (strcmp(command, OUT) == 0)
-            PrintResult(&stk);
-        else if (strcmp(command, HLT) == 0)
-            return;
-        else
-            return;
-    }
+    StackPop(stk, secondVal);
+    StackPop(stk, firstVal);
+    //TODO: ретерн в случае ошибки
 }
