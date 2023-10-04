@@ -2,11 +2,11 @@
 
 #include "Disassembly.h"
 
-//docs - first command arg - in, second - out
+//argv[1] - in, argv[2] - out
 int main(const int argc, const char* argv[])
 {
     LogOpen(argv[0]);
-    
+
     FILE* in  = nullptr;
     FILE* out = nullptr;
 

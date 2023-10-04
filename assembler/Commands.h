@@ -1,8 +1,9 @@
 #ifndef COMMANDS_H
 #define COMMANDS_H
 
+#include <assert.h>
 #include "../Errors.h"
-#include "../Log.h"
+#include "../Log.h" //
 
 enum class CommandsErrors
 {
@@ -37,12 +38,24 @@ enum class Commands
     HLT_ID,
 };
 
-inline void CommandsErrorsLogError(CommandsErrors error)
+#define COMMANDS_ERRORS_LOG_ERROR(error) CommandsErrorsLogError(error,                \
+                                                                __FILE__,             \
+                                                                __func__,             \
+                                                                __LINE__)
+
+inline void CommandsErrorsLogError(CommandsErrors error, const char* fileName, 
+                                                         const char* funcName, 
+                                                         const int line)
 {
+    assert(fileName);
+    assert(funcName);
+
     if (error == CommandsErrors::NO_ERR)
         return;
     
     LOG_BEGIN();
+
+    Log("Error occurred in file %s, function %s, line %d\n", fileName, funcName, line);
 
     switch(error)
     {
