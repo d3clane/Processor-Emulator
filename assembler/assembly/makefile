@@ -14,7 +14,7 @@ CXXFLAGS = -D _DEBUG -ggdb3 -std=c++17 -O0 -Wall -Wextra -Weffc++ -Waggressive-l
 		   -fPIE -Werror=vla
 
 PROGRAMDIR = build/bin
-TARGET = ../../$(PROGRAMDIR)/assembly
+TARGET = $(PROGRAMDIR)/assembly
 OBJECTDIR = build
 DOXYFILE = Others/Doxyfile
 
