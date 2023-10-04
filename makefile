@@ -14,13 +14,13 @@ CXXFLAGS = -D _DEBUG -ggdb3 -std=c++17 -O0 -Wall -Wextra -Weffc++ -Waggressive-l
 		   -fPIE -Werror=vla
 
 PROGRAMDIR = build/bin
-TARGET = processor
+TARGET = SPU
 OBJECTDIR = build
 DOXYFILE = Others/Doxyfile
 
-HEADERS  = Colors.h Errors.h Stack.h Log.h ArrayFuncs.h Types.h HashFuncs.h Processor.h
+HEADERS  = Colors.h Errors.h Stack.h Log.h ArrayFuncs.h Types.h HashFuncs.h SPU.h
 
-FILESCPP = main.cpp Errors.cpp Stack.cpp Log.cpp ArrayFuncs.cpp HashFuncs.cpp Processor.cpp
+FILESCPP = main.cpp Errors.cpp Stack.cpp Log.cpp ArrayFuncs.cpp HashFuncs.cpp SPU.cpp
 
 objects = $(FILESCPP:%.cpp=$(OBJECTDIR)/%.o)
 
