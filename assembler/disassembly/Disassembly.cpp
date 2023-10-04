@@ -43,8 +43,8 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
                 fprintf(outStream, HLT);
                 return CommandsErrors::NO_ERR;
             default:
-                CommandsErrorsLogError(CommandsErrors::INVALID_COMMAND_ID);
-                                return CommandsErrors::INVALID_COMMAND_ID;
+                COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_ID);
+                                  return CommandsErrors::INVALID_COMMAND_ID;
         }
 
         CopyLine(inStream, outStream);

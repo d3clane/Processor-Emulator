@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include "Assembly.h"
-#include "../../Log.h"
+#include "../Log.h"
 
 static inline void CopyLine(FILE* inStream, FILE* outStream);
 
@@ -41,8 +41,8 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
         else
         {
             //TODO: надо чтобы он выводил строчку, откуда call произошел (просто макрос нацепить)
-            CommandsErrorsLogError(CommandsErrors::INVALID_COMMAND_STRING);
-                            return CommandsErrors::INVALID_COMMAND_STRING;
+            COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_STRING);
+                               return CommandsErrors::INVALID_COMMAND_STRING;
         }
 
         CopyLine(inStream, outStream);
