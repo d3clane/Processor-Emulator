@@ -44,7 +44,7 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
                 return CommandsErrors::NO_ERR;
             default:
                 COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_ID);
-                                  return CommandsErrors::INVALID_COMMAND_ID;
+                                   return CommandsErrors::INVALID_COMMAND_ID;
         }
 
         CopyLine(inStream, outStream);
