@@ -10,9 +10,9 @@
 #include "Types.h"
 #include "HashFuncs.h"
 
-//#define STACK_CANARY_PROTECTION
+#define STACK_CANARY_PROTECTION
 
-//#define STACK_HASH_PROTECTION
+#define STACK_HASH_PROTECTION
 
 #ifdef STACK_CANARY_PROTECTION
 
