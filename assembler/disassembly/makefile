@@ -18,9 +18,9 @@ TARGET = $(PROGRAMDIR)/disassembly
 OBJECTDIR = build
 DOXYFILE = Others/Doxyfile
 
-HEADERS  = Disassembly.h ../Log.h ../Commands.h ../Colors.h
+HEADERS  = Disassembly.h ../../Log.h ../Commands.h ../../Colors.h ../../InputOutput.h ../../StringFuncs.h ../../Errors.h
 
-FILESCPP = Disassembly.cpp main.cpp ../Log.cpp
+FILESCPP = Disassembly.cpp main.cpp ../../Log.cpp ../../InputOutput.cpp ../../StringFuncs.cpp ../../Errors.cpp
 
 objects = $(FILESCPP:%.cpp=$(OBJECTDIR)/%.o)
 
