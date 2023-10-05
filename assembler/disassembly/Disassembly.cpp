@@ -25,41 +25,42 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
         size_t commandLength = 0;
         sscanf(byteCode.lines[line].line, "%d", &command);
 
+        assert(asmCodePtr < asmCode + byteCode.textSz * maxCommandLength);
+
         switch((Commands) command)
         {
             case Commands::PUSH_ID:
-                asmCodePtr += sprintf(asmCode, "%s", PUSH);
+                asmCodePtr += sprintf(asmCodePtr, "%s", PUSH);
                 commandLength = strlen(PUSH); 
                 //Не знаю вместо стрлен можно просто константу пихать,
                 //мне кажется компилятор должен оптимизировать сам, раз уж PUSH константна
                 break;
             case Commands::IN_ID:
-                asmCodePtr += sprintf(asmCode, "%s", IN);
+                asmCodePtr += sprintf(asmCodePtr, "%s", IN);
                 commandLength = strlen(IN);
-                fprintf(outStream, IN);
                 break;
             case Commands::DIV_ID:
-                asmCodePtr += sprintf(asmCode, "%s", DIV);
+                asmCodePtr += sprintf(asmCodePtr, "%s", DIV);
                 commandLength = strlen(DIV);
                 break;
             case Commands::ADD_ID:
-                asmCodePtr += sprintf(asmCode, "%s", ADD);
+                asmCodePtr += sprintf(asmCodePtr, "%s", ADD);
                 commandLength = strlen(ADD);
                 break;
             case Commands::SUB_ID:
-                asmCodePtr += sprintf(asmCode, "%s", SUB);
+                asmCodePtr += sprintf(asmCodePtr, "%s", SUB);
                 commandLength = strlen(SUB);
                 break;
             case Commands::MUL_ID:
-                asmCodePtr += sprintf(asmCode, "%s", MUL);
+                asmCodePtr += sprintf(asmCodePtr, "%s", MUL);
                 commandLength = strlen(MUL);
                 break;
             case Commands::OUT_ID:
-                asmCodePtr += sprintf(asmCode, "%s", OUT);
+                asmCodePtr += sprintf(asmCodePtr, "%s", OUT);
                 commandLength = strlen(OUT);
                 break;
             case Commands::HLT_ID:
-                asmCodePtr += sprintf(asmCode, "%s", HLT);
+                asmCodePtr += sprintf(asmCodePtr, "%s", HLT);
                 commandLength = strlen(HLT);
                 quitCycle = true;
                 break;
