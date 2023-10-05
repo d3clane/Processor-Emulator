@@ -2,8 +2,9 @@
 #include <string.h>
 
 #include "Disassembly.h"
+#include "../../InputOutput.h"
 
-static inline void CopyLine(FILE* inStream, FILE* outStream);
+static inline char* CopyLine(const char* source, char* target);
 
 CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
 {
@@ -11,61 +12,104 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
     assert(outStream);
 
     int command = -1;
-    
-    while (true)
+    TextType byteCode = {};
+    TextTypeCtor(&byteCode, inStream);
+
+    static const size_t maxCommandLength = 5;
+    char* asmCode    = (char*) calloc(byteCode.textSz * maxCommandLength, sizeof(*asmCode));
+    char* asmCodePtr = asmCode;
+
+    for (size_t line = 0; line < byteCode.linesCnt; ++line)
     {
-        fscanf(inStream, "%d", &command);
+        bool quitCycle = false;
+        size_t commandLength = 0;
+        sscanf(byteCode.lines[line].line, "%d", &command);
 
         switch((Commands) command)
         {
             case Commands::PUSH_ID:
-                fprintf(outStream, PUSH);
+                asmCodePtr += sprintf(asmCode, "%s", PUSH);
+                commandLength = strlen(PUSH); 
+                //Не знаю вместо стрлен можно просто константу пихать,
+                //мне кажется компилятор должен оптимизировать сам, раз уж PUSH константна
                 break;
             case Commands::IN_ID:
+                asmCodePtr += sprintf(asmCode, "%s", IN);
+                commandLength = strlen(IN);
                 fprintf(outStream, IN);
                 break;
             case Commands::DIV_ID:
-                fprintf(outStream, DIV);
+                asmCodePtr += sprintf(asmCode, "%s", DIV);
+                commandLength = strlen(DIV);
                 break;
             case Commands::ADD_ID:
-                fprintf(outStream, ADD);
+                asmCodePtr += sprintf(asmCode, "%s", ADD);
+                commandLength = strlen(ADD);
                 break;
             case Commands::SUB_ID:
-                fprintf(outStream, SUB);
+                asmCodePtr += sprintf(asmCode, "%s", SUB);
+                commandLength = strlen(SUB);
                 break;
             case Commands::MUL_ID:
-                fprintf(outStream, MUL);
+                asmCodePtr += sprintf(asmCode, "%s", MUL);
+                commandLength = strlen(MUL);
                 break;
             case Commands::OUT_ID:
-                fprintf(outStream, OUT);
+                asmCodePtr += sprintf(asmCode, "%s", OUT);
+                commandLength = strlen(OUT);
                 break;
             case Commands::HLT_ID:
-                fprintf(outStream, HLT);
-                return CommandsErrors::NO_ERR;
+                asmCodePtr += sprintf(asmCode, "%s", HLT);
+                commandLength = strlen(HLT);
+                quitCycle = true;
+                break;
             default:
                 COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_ID);
-                                   return CommandsErrors::INVALID_COMMAND_ID;
+
+                TextTypeDestructor(&byteCode);
+
+                free(asmCode);
+                asmCode    = nullptr;
+                asmCodePtr = nullptr;
+
+                return CommandsErrors::INVALID_COMMAND_ID;
         }
 
-        CopyLine(inStream, outStream);
+        if (quitCycle)
+            break;
+
+        asmCodePtr = CopyLine(byteCode.lines[line].line + commandLength, asmCodePtr);
     }
+
+    PrintText(asmCode, strlen(asmCode), outStream);
+
+    TextTypeDestructor(&byteCode);
+
+    free(asmCode);
+    asmCode    = nullptr;
+    asmCodePtr = nullptr;
 
     return CommandsErrors::NO_ERR;
 }
 
-static inline void CopyLine(FILE* inStream, FILE* outStream)
+static inline char* CopyLine(const char* source, char* target)
 {
-    assert(inStream);
-    assert(outStream);
+    assert(source);
+    assert(target);
 
-    int ch = 0;
-
-    while (true)
+    const char* srcPtr  = source;
+          char* targPtr = target;
+    
+    while (*srcPtr != '\n' && *srcPtr != '\0')
     {
-        ch = getc(inStream);
-        putc(ch, outStream);
+        *targPtr = *srcPtr;
 
-        if (ch == '\n' || ch == EOF) 
-            break;
+        ++targPtr;
+        ++srcPtr;
     }
+
+    *targPtr = *srcPtr;
+    ++targPtr;
+
+    return targPtr;
 }
