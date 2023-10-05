@@ -19,6 +19,10 @@ enum class Errors
     NO_ERR,
     
     MEMORY_ALLOCATION_ERR,
+
+    FILE_OPENING_ERR,
+    GETTING_FILE_SIZE_ERR,
+    PRINTING_TO_FILE_ERR
 };
 
 //-----------------------------------------------------------------------------------------------

@@ -14,7 +14,7 @@ int main(const int argc, const char* argv[])
         in = fopen(argv[1], "r");
     else
         in = fopen("in.txt", "r");
-
+    
     if (argc > 2)
         out = fopen(argv[2], "w");
     else
