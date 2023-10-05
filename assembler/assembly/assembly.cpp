@@ -11,53 +11,60 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
     assert(inStream);
     assert(outStream);
 
-    TextType assemblerCode = {};
-    TextTypeCtor(&assemblerCode, inStream);
+    TextType asmCode = {};
+    TextTypeCtor(&asmCode, inStream);
 
-    char* outText    = (char*) calloc(assemblerCode.textSz, sizeof(*outText));
-    char* outTextPtr = outText;
+    char* byteCode    = (char*) calloc(asmCode.textSz, sizeof(*byteCode));
+    char* byteCodePtr = byteCode;
 
     static const size_t maxCommandLength  = 5;
     static char command[maxCommandLength] = "";
 
-    for (size_t line = 0; line < assemblerCode.linesCnt; ++line)
+    for (size_t line = 0; line < asmCode.linesCnt; ++line)
     {
-        sscanf(assemblerCode.lines[line].line, "%s", command);
+        sscanf(asmCode.lines[line].line, "%s", command);
 
         if (strcmp(command, PUSH) == 0)
-            outTextPtr += sprintf(outTextPtr, "%d", (int) Commands::PUSH_ID);
+            byteCodePtr += sprintf(byteCodePtr, "%d", (int) Commands::PUSH_ID);
         else if (strcmp(command, IN) == 0)
-            outTextPtr += sprintf(outTextPtr, "%d", (int) Commands::IN_ID);
+            byteCodePtr += sprintf(byteCodePtr, "%d", (int) Commands::IN_ID);
         else if (strcmp(command, DIV) == 0)
-            outTextPtr += sprintf(outTextPtr, "%d", (int) Commands::DIV_ID);
+            byteCodePtr += sprintf(byteCodePtr, "%d", (int) Commands::DIV_ID);
         else if (strcmp(command, MUL) == 0)
-            outTextPtr += sprintf(outTextPtr, "%d", (int) Commands::MUL_ID);
+            byteCodePtr += sprintf(byteCodePtr, "%d", (int) Commands::MUL_ID);
         else if (strcmp(command, SUB) == 0)
-            outTextPtr += sprintf(outTextPtr, "%d", (int) Commands::SUB_ID);
+            byteCodePtr += sprintf(byteCodePtr, "%d", (int) Commands::SUB_ID);
         else if (strcmp(command, ADD) == 0)
-            outTextPtr += sprintf(outTextPtr, "%d", (int) Commands::ADD_ID);
+            byteCodePtr += sprintf(byteCodePtr, "%d", (int) Commands::ADD_ID);
         else if (strcmp(command, OUT) == 0)
-            outTextPtr += sprintf(outTextPtr, "%d", (int) Commands::OUT_ID);
+            byteCodePtr += sprintf(byteCodePtr, "%d", (int) Commands::OUT_ID);
         else if (strcmp(command, HLT) == 0)
         {
-            outTextPtr += sprintf(outTextPtr, "%d", (int) Commands::HLT_ID);
+            byteCodePtr += sprintf(byteCodePtr, "%d", (int) Commands::HLT_ID);
             break;  
         }
         else
         {
-            TextTypeDestructor(&assemblerCode);
-            free(outText);
+            TextTypeDestructor(&asmCode);
+
+            free(byteCode);
+            byteCode    = nullptr;
+            byteCodePtr = nullptr;
+
             COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_STRING);
                                return CommandsErrors::INVALID_COMMAND_STRING;
         }
 
-        outTextPtr = CopyLine(assemblerCode.lines[line].line + strlen(command), outTextPtr);
+        byteCodePtr = CopyLine(asmCode.lines[line].line + strlen(command), byteCodePtr);
     }
 
-    PrintText(outText, assemblerCode.textSz, outStream);
+    PrintText(byteCode, strlen(byteCode), outStream);
 
-    TextTypeDestructor(&assemblerCode);
-    free(outText);
+    TextTypeDestructor(&asmCode);
+    
+    free(byteCode);
+    byteCode    = nullptr;
+    byteCodePtr = nullptr;
 
     return CommandsErrors::NO_ERR;
 }
