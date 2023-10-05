@@ -38,10 +38,8 @@ enum class Commands
     HLT_ID,
 };
 
-#define COMMANDS_ERRORS_LOG_ERROR(error) CommandsErrorsLogError(error,                \
-                                                                __FILE__,             \
-                                                                __func__,             \
-                                                                __LINE__)
+#define COMMANDS_ERRORS_LOG_ERROR(error) CommandsErrorsLogError(error,                          \
+                                                                __FILE__, __func__, __LINE__)
 
 inline void CommandsErrorsLogError(CommandsErrors error, const char* fileName, 
                                                          const char* funcName, 
