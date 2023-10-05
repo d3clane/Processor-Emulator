@@ -1,12 +1,12 @@
 #include <stdio.h>
 
-#include "SPU.h"
 #include "Log.h"
+#include "SPU.h"
 
 int main(const int argc, const char* const argv[])
 {
     LogOpen(argv[0]);
-    
+
     FILE* in  = nullptr;
     if (argc > 1)
         in = fopen(argv[1], "r");
@@ -16,4 +16,4 @@ int main(const int argc, const char* const argv[])
     Processing(in);
 
     fclose(in);
-}  
+}
