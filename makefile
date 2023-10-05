@@ -18,9 +18,9 @@ TARGET = SPU
 OBJECTDIR = build
 DOXYFILE = Others/Doxyfile
 
-HEADERS  = Colors.h Errors.h Stack.h Log.h ArrayFuncs.h Types.h HashFuncs.h SPU.h
+HEADERS  = Colors.h Errors.h Stack.h Log.h ArrayFuncs.h Types.h HashFuncs.h SPU.h InputOutput.h StringFuncs.h
 
-FILESCPP = main.cpp Errors.cpp Stack.cpp Log.cpp ArrayFuncs.cpp HashFuncs.cpp SPU.cpp
+FILESCPP = main.cpp Errors.cpp Stack.cpp Log.cpp ArrayFuncs.cpp HashFuncs.cpp SPU.cpp InputOutput.cpp StringFuncs.cpp
 
 objects = $(FILESCPP:%.cpp=$(OBJECTDIR)/%.o)
 

@@ -2,9 +2,10 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "assembler/Commands.h"
 #include "SPU.h"
 #include "Stack.h"
-#include "assembler/Commands.h"
+#include "InputOutput.h"
 
 //TODO: пусть на возврате ошибок все принтится в лог файл(такую функцию запилить надо бы и все) 
 //Просто функция принтов ошибок как в ассемблере и дизассемблере сделана 
@@ -13,10 +14,18 @@
 struct SpuType
 {
     StackType stack;
-    FILE* byteCode;
+
+    FILE* byteCodeFile;
+    char* byteCodeArray;
+    char* byteCodeArrayReadPtr;
+
+    ElemType registers[NumberOfRegisters];
 };
 
 static SpuErrors ProcessorCtor(SpuType* processor, FILE* inStream);
+static SpuErrors ProcessorDtor(SpuType* processor);
+static SpuErrors ProcessorDump(SpuType* processor);
+static SpuErrors ProcessorVerify(SpuType* processor);
 
 static SpuErrors CommandPush(SpuType* processor);
 static SpuErrors CommandIn(SpuType* processor);
@@ -32,6 +41,16 @@ static SpuErrors GetTwoLastValuesFromStack(StackType* stack, ElemType* firstVal,
 
 static inline bool IsValidValues(const ElemType* firstVal, const ElemType* secondVal);
 
+#define IF_ERR_RETURN(ERROR)                                                      \
+do                                                                                \
+{                                                                                 \
+    if ((ERROR) != SpuErrors::NO_ERR)                                             \
+    {                                                                             \
+        SPU_ERRORS_LOG_ERROR((ERROR));                                            \
+                      return (ERROR);                                             \
+    }                                                                             \
+} while (0)
+
 SpuErrors Processing(FILE* inStream)
 {
     assert(inStream);
@@ -41,11 +60,15 @@ SpuErrors Processing(FILE* inStream)
 
     int command = -1;
     
+    SpuErrors processorError = SpuErrors::NO_ERR;
+
     while (true)
     {
-        fscanf(inStream, "%d", &command);
+        command = (int) strtol(processor.byteCodeArrayReadPtr, 
+                              &processor.byteCodeArrayReadPtr, 
+                               10);
 
-        SpuErrors processorError = SpuErrors::NO_ERR;
+        bool quitCycle = false;
 
         switch((Commands) command)
         {
@@ -71,18 +94,27 @@ SpuErrors Processing(FILE* inStream)
                 processorError = CommandOut(&processor);
                 break;
             case Commands::HLT_ID:
-                return SpuErrors::NO_ERR;
+                quitCycle = true;
             default:
-                SPU_ERRORS_LOG_ERROR(SpuErrors::INVALID_COMMAND);
-                              return SpuErrors::INVALID_COMMAND;
+                processorError = SpuErrors::INVALID_COMMAND;
+                SPU_ERRORS_LOG_ERROR(processorError);
+
+                quitCycle = true;
+                break;
         }
 
         if (processorError != SpuErrors::NO_ERR)
-        {
-            SPU_ERRORS_LOG_ERROR(processorError);
-                          return processorError;
-        }
+            break;
+
+        if (quitCycle)
+            break;
     }
+
+    ProcessorDtor(&processor);
+    
+    IF_ERR_RETURN(processorError);
+
+    return SpuErrors::NO_ERR;
 }
 
 #define RETURN_STACK_PUSH_ERR(PROCESSOR, VALUE_TO_PUSH)                           \
@@ -102,24 +134,30 @@ do                                                                              
 static SpuErrors CommandPush(SpuType* processor)
 {
     assert(processor);
-    assert(processor->byteCode);
+    assert(processor->byteCodeFile);
 
     ElemType valueToPush = 0;
-    int scanfResult = fscanf(processor->byteCode, ElemTypeFormat, &valueToPush);
 
-    if (scanfResult != 1)
+    char* tmpByteCodePtr = nullptr;
+    valueToPush = strtol(processor->byteCodeArrayReadPtr,
+                        &tmpByteCodePtr,
+                        10);
+                    
+    if (tmpByteCodePtr == processor->byteCodeArrayReadPtr)
     {
         SPU_ERRORS_LOG_ERROR(SpuErrors::READING_FROM_BYTE_CODE_ERR);
                       return SpuErrors::READING_FROM_BYTE_CODE_ERR;
     }
     
+    processor->byteCodeArrayReadPtr = tmpByteCodePtr;
+
     RETURN_STACK_PUSH_ERR(processor, valueToPush);
 }
 
 static SpuErrors CommandIn(SpuType* processor)
 {
     assert(processor);
-    assert(processor->byteCode);
+    assert(processor->byteCodeFile);
 
     ElemType valueToPush = 0;
     int scanfResult = scanf(ElemTypeFormat, &valueToPush);
@@ -142,17 +180,6 @@ do                                                                              
                       return SpuErrors::VALUES_COULD_NOT_BE_USED_FOR_ARITHMETIC;  \
     }                                                                             \
 } while (0)
-
-#define IF_ERR_RETURN(ERROR)                                                      \
-do                                                                                \
-{                                                                                 \
-    if ((ERROR) != SpuErrors::NO_ERR)                                             \
-    {                                                                             \
-        SPU_ERRORS_LOG_ERROR(SpuErrors::VALUES_COULD_NOT_BE_USED_FOR_ARITHMETIC); \
-        return (ERROR);                                                           \
-    }                                                                             \
-} while (0)
-
 
 static SpuErrors CommandDiv(SpuType* processor)
 {
@@ -243,6 +270,7 @@ static SpuErrors CommandOut(SpuType* processor)
 
     printf("Equation result: " ElemTypeFormat "\n", equationResult);
 
+    //PUSH_ON_STACK_BACK
     RETURN_STACK_PUSH_ERR(processor, equationResult);
 }
 
@@ -273,7 +301,9 @@ static SpuErrors ProcessorCtor(SpuType* processor, FILE* inStream)
     assert(processor);
     assert(inStream);
 
-    processor->byteCode = inStream;
+    processor->byteCodeFile         =          inStream;
+    processor->byteCodeArray        = ReadText(inStream);
+    processor->byteCodeArrayReadPtr = processor->byteCodeArray;
 
     StackErrorsType stackError = StackCtor(&processor->stack);
 
@@ -330,4 +360,6 @@ void SpuErrorsLogError(SpuErrors error, const char* fileName,
             LOG_ERR("Unknown error.\n");
             break;
     }
+
+    LOG_END();
 }
