@@ -20,7 +20,8 @@ enum class SpuErrors
     BYTE_CODE_ARR_IS_NULLPTR,
     BYTE_CODE_ARR_PTR_OUT_OF_RANGE,
 
-
+    INVALID_VERSION,
+    INVALID_SIGNATURE,
 };
 
 #define SPU_ERRORS_LOG_ERROR(ERROR) SpuErrorsLogError((ERROR), __FILE__, \
