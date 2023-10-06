@@ -4,7 +4,10 @@
 #include "Assembly.h"
 #include "../../InputOutput.h"
 
+static const uint32_t AssemblyVersion = 1;
+
 static inline char* CopyLine(const char* source, char* target);
+static inline char* AddSpecificationInfo(char* byteCode);
 
 CommandsErrors Assembly(FILE* inStream, FILE* outStream)
 {
@@ -14,10 +17,15 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
     TextType asmCode = {};
     TextTypeCtor(&asmCode, inStream);
 
-    char* byteCode    = (char*) calloc(asmCode.textSz, sizeof(*byteCode));
+    static const size_t AddedInfoSize = sizeof(Signature)       + sizeof('\n') + 
+                                        sizeof(AssemblyVersion) + sizeof('\n');
+
+    char* byteCode    = (char*) calloc(asmCode.textSz + AddedInfoSize, sizeof(*byteCode));
     char* byteCodePtr = byteCode;
 
-    static const size_t maxCommandLength  = 5;
+    byteCodePtr = AddSpecificationInfo(byteCodePtr);
+
+    static const size_t maxCommandLength  =  5;
     static char command[maxCommandLength] = "";
 
     for (size_t line = 0; line < asmCode.linesCnt; ++line)
@@ -61,7 +69,7 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
     PrintText(byteCode, strlen(byteCode), outStream);
 
     TextTypeDestructor(&asmCode);
-    
+
     free(byteCode);
     byteCode    = nullptr;
     byteCodePtr = nullptr;
@@ -89,4 +97,13 @@ static inline char* CopyLine(const char* source, char* target)
     ++targPtr;
 
     return targPtr;
+}
+
+static inline char* AddSpecificationInfo(char* byteCode)
+{
+    assert(byteCode);
+
+    byteCode += sprintf(byteCode, "%d\n%d\n", Signature, AssemblyVersion);
+
+    return byteCode;
 }
