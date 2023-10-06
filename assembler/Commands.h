@@ -19,10 +19,13 @@ enum class CommandsErrors
 typedef uint32_t SignatureType;
 typedef uint32_t VersionType;
 
+#pragma GCC diagnostic ignored "-Wmultichar"
 static const SignatureType Signature = 'COCK';
+#pragma GCC diagnostic warning "-Wmultichar"
 
-static const size_t AddedInfoSize          = sizeof(SignatureType) + sizeof('\n') + 
-                                             sizeof(VersionType)   + sizeof('\n');
+// Signature in chars(10) + new line(1) + version in chars(1) + new line(1)
+static const size_t AddedInfoSizeByteCode         = 10 + 1 + 1  + 1;
+            
 static const size_t AddedInfoNumberOfLines = 2;
 
 static const size_t NumberOfRegisters = 4;

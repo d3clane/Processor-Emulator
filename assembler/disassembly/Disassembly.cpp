@@ -5,7 +5,7 @@
 #include "../../InputOutput.h"
 
 static inline void SkipAddedInfo(TextType* byteCode);
-static inline void ReturnToTheByteCodeStart(TextType* byteCode);
+static inline void MoveToTheByteCodeStart(TextType* byteCode);
 static inline CommandsErrors CheckAddedInfo(TextType* byteCode);
 
 static inline char* CopyLine(const char* source, char* target);
@@ -99,7 +99,7 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
 
     PrintText(asmCode, strlen(asmCode), outStream);
 
-    ReturnToTheByteCodeStart(&byteCode);
+    MoveToTheByteCodeStart(&byteCode);
     TextTypeDestructor(&byteCode);
 
     free(asmCode);
@@ -138,28 +138,20 @@ static inline void SkipAddedInfo(TextType* byteCode)
 
     byteCode->lines    += AddedInfoNumberOfLines;
     byteCode->linesCnt -= AddedInfoNumberOfLines;
-
-    /*
-    byteCode->text   += AddedInfoSize;
-    byteCode->textSz -= AddedInfoSize;
-    */
-   //Не меняю потому что во-первых проблема в том, что надо узнать размер добавленной инфы в виде строчек
-   // решение, которые я придумал - перейти на бинарный файл, там уже сразу знаю
-   // другое решение - самому сделать глобальную коснтанту потому что я могу предсказать кол-во чаров
-   // (ну типо я буквально знаю что я пушу так как это константы)
+    
+    byteCode->text   += AddedInfoSizeByteCode;
+    byteCode->textSz -= AddedInfoSizeByteCode;
 }
 
-static inline void ReturnToTheByteCodeStart(TextType* byteCode)
+static inline void MoveToTheByteCodeStart(TextType* byteCode)
 {
     assert(byteCode);
 
     byteCode->lines    -= AddedInfoNumberOfLines;
     byteCode->linesCnt += AddedInfoNumberOfLines;
 
-    /*
-    byteCode->text   -= AddedInfoSize;
-    byteCode->textSz += AddedInfoSize;
-    */
+    byteCode->text   -= AddedInfoSizeByteCode;
+    byteCode->textSz += AddedInfoSizeByteCode;
 }
 
 static inline CommandsErrors CheckAddedInfo(TextType* byteCode)
