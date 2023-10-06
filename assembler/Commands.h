@@ -3,7 +3,7 @@
 
 #include <assert.h>
 #include "../Errors.h"
-#include "../Log.h" //
+#include "../Log.h"
 
 enum class CommandsErrors
 {
@@ -11,7 +11,21 @@ enum class CommandsErrors
 
     INVALID_COMMAND_STRING,
     INVALID_COMMAND_ID,
+
+    INVALID_SIGNATURE,
+    INVALID_VERSIONS,
 };
+
+typedef uint32_t SignatureType;
+typedef uint32_t VersionType;
+
+static const SignatureType Signature = 'COCK';
+
+static const size_t AddedInfoSize          = sizeof(SignatureType) + sizeof('\n') + 
+                                             sizeof(VersionType)   + sizeof('\n');
+static const size_t AddedInfoNumberOfLines = 2;
+
+static const size_t NumberOfRegisters = 4;
 
 //TODO подумать че сделать с этими константами
 static const char* const PUSH   = "push";
@@ -65,6 +79,13 @@ inline void CommandsErrorsLogError(CommandsErrors error, const char* fileName,
             break;
         case CommandsErrors::INVALID_COMMAND_STRING:
             LOG_ERR("Invalid command string in assembler file.\n");
+            break;
+
+        case CommandsErrors::INVALID_VERSIONS:
+            LOG_ERR("Disassembler and assembler versions doesn't match.\n");
+            break;
+        case CommandsErrors::INVALID_SIGNATURE:
+            LOG_ERR("Wrong signature in file. Can't disassembler.\n");
             break;
 
         default:

@@ -4,7 +4,7 @@
 #include "Assembly.h"
 #include "../../InputOutput.h"
 
-static const uint32_t AssemblyVersion = 1;
+static const VersionType AssemblyVersion = 1;
 
 static inline char* CopyLine(const char* source, char* target);
 static inline char* AddSpecificationInfo(char* byteCode);
@@ -16,9 +16,6 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
 
     TextType asmCode = {};
     TextTypeCtor(&asmCode, inStream);
-
-    static const size_t AddedInfoSize = sizeof(Signature)       + sizeof('\n') + 
-                                        sizeof(AssemblyVersion) + sizeof('\n');
 
     char* byteCode    = (char*) calloc(asmCode.textSz + AddedInfoSize, sizeof(*byteCode));
     char* byteCodePtr = byteCode;
