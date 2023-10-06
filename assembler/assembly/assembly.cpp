@@ -17,7 +17,7 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
     TextType asmCode = {};
     TextTypeCtor(&asmCode, inStream);
 
-    char* byteCode    = (char*) calloc(asmCode.textSz + AddedInfoSize, sizeof(*byteCode));
+    char* byteCode    = (char*) calloc(asmCode.textSz + AddedInfoSizeByteCode, sizeof(*byteCode));
     char* byteCodePtr = byteCode;
 
     byteCodePtr = AddSpecificationInfo(byteCodePtr);
@@ -100,7 +100,9 @@ static inline char* AddSpecificationInfo(char* byteCode)
 {
     assert(byteCode);
 
-    byteCode += sprintf(byteCode, "%d\n%d\n", Signature, AssemblyVersion);
+    int addedInfoSizeof = sprintf(byteCode, "%u\n%u\n", Signature, AssemblyVersion);
 
-    return byteCode;
+    assert((size_t) addedInfoSizeof == AddedInfoSizeByteCode);
+
+    return byteCode + addedInfoSizeof;
 }
