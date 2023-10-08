@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "Disassembly.h"
 #include "../../InputOutput.h"
@@ -9,6 +10,7 @@ static inline void MoveToTheByteCodeStart(TextType* byteCode);
 static inline CommandsErrors FileVerify(TextType* byteCode);
 
 static inline char* CopyLine(const char* source, char* target);
+static inline size_t CopyRegister(const char* source, char** target);
 
 static const uint32_t DisassemblyVersion = 1;
 
@@ -30,7 +32,8 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
 
     SkipAddedInfo(&byteCode);
 
-    static const size_t maxCommandLength = 5;
+    static const size_t maxCommandLength = 8; //including register length
+    //TODO: change on reading from the beginning of the file for example
     char* asmCode    = (char*) calloc(byteCode.textSz * maxCommandLength, sizeof(*asmCode));
     char* asmCodePtr = asmCode;
 
@@ -50,6 +53,22 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
                 asmCodePtr += sprintf(asmCodePtr, "%s", PUSH);
                 readCommandLength = 1;
                 break;
+            case Commands::PUSH_REGISTER_ID:
+            {
+                asmCodePtr += sprintf(asmCodePtr, "%s ", PUSH);
+                readCommandLength = 1;
+                size_t regLength = CopyRegister(byteCode.lines[line].line + readCommandLength, &asmCodePtr);
+                readCommandLength += 1 + regLength; //1 is because of the '\n' symbol
+                break;
+            }
+            case Commands::POP_ID:
+            {
+                asmCodePtr += sprintf(asmCodePtr, "%s ", POP);
+                readCommandLength = 1;
+                size_t regLength = CopyRegister(byteCode.lines[line].line + readCommandLength, &asmCodePtr);
+                readCommandLength += 1 + regLength;
+                break;
+            }
             case Commands::IN_ID:
                 asmCodePtr += sprintf(asmCodePtr, "%s", IN);
                 readCommandLength = 1;
@@ -129,6 +148,25 @@ static inline char* CopyLine(const char* source, char* target)
     ++targPtr;
 
     return targPtr;
+}
+
+static inline size_t CopyRegister(const char* source, char** target)
+{
+    assert(source);
+    assert(target);
+    assert(*target);
+
+    char* targPtr = *target;
+
+    int registerId  = -1;
+    sscanf(source, "%d", &registerId);
+
+    if (0 <= registerId && registerId <= 2)
+        targPtr += sprintf(targPtr, "r%cx", 'a' + registerId);
+
+    *target = targPtr;
+
+    return 1; //TODO: обработать длину registerId как-нибудь по-адекватному, а не +1.
 }
 
 static inline void SkipAddedInfo(TextType* byteCode)
