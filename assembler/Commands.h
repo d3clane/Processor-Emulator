@@ -44,9 +44,7 @@ static const char* const ADD    =  "add";
 static const char* const OUT    =  "out";
 static const char* const HLT    =  "hlt";
 
-static const char* Registers[] = {"rax", "rbx", "rcx", "rdx"};
-
-static const size_t RegisterLength = 3;
+static const size_t RegisterStringLength = 3;
 
 enum class Commands
 {

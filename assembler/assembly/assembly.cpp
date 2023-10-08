@@ -171,7 +171,7 @@ static inline int GetRegisterId(const char* reg)
 {
     assert(reg);
 
-    if (strlen(reg) != RegisterLength)
+    if (strlen(reg) != RegisterStringLength)
         return -1;
     
     if (reg[0] != 'r' || reg[2] != 'x' || reg[1] > 'd' || reg[1] < 'a')
