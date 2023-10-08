@@ -6,7 +6,7 @@
 
 static inline void SkipAddedInfo(TextType* byteCode);
 static inline void MoveToTheByteCodeStart(TextType* byteCode);
-static inline CommandsErrors CheckAddedInfo(TextType* byteCode);
+static inline CommandsErrors FileVerify(TextType* byteCode);
 
 static inline char* CopyLine(const char* source, char* target);
 
@@ -20,7 +20,7 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
     TextType byteCode = {};
     TextTypeCtor(&byteCode, inStream);
 
-    CommandsErrors addedInfoErrors = CheckAddedInfo(&byteCode);
+    CommandsErrors addedInfoErrors = FileVerify(&byteCode);
 
     if (addedInfoErrors != CommandsErrors::NO_ERR)
     {
@@ -154,7 +154,7 @@ static inline void MoveToTheByteCodeStart(TextType* byteCode)
     byteCode->textSz += AddedInfoSizeByteCode;
 }
 
-static inline CommandsErrors CheckAddedInfo(TextType* byteCode)
+static inline CommandsErrors FileVerify(TextType* byteCode)
 {
     assert(byteCode);
     assert(byteCode->linesCnt > 1);

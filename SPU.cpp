@@ -48,7 +48,7 @@ static SpuErrors CommandOut(SpuType* spu);
 
 //----------Added info functions-------
 
-static inline SpuErrors CheckAddedInfo(SpuType* spu);
+static inline SpuErrors FileVerify(SpuType* spu);
 static inline SpuErrors SkipAddedInfo(SpuType* spu);
 
 //-----------Other functions-------------
@@ -99,7 +99,7 @@ SpuErrors Processing(FILE* inStream)
     SpuType spu = {};
     SpuCtor(&spu, inStream);
 
-    SpuErrors addedInfoError = CheckAddedInfo(&spu);
+    SpuErrors addedInfoError = FileVerify(&spu);
 
     if (addedInfoError != SpuErrors::NO_ERR)
     {
@@ -588,7 +588,7 @@ static inline SpuErrors SkipAddedInfo(SpuType* spu)
     return SpuErrors::NO_ERR;
 }
 
-static inline SpuErrors CheckAddedInfo(SpuType* spu)
+static inline SpuErrors FileVerify(SpuType* spu)
 {
     assert(spu);
 
