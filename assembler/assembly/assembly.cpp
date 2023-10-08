@@ -1,13 +1,22 @@
 #include <assert.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "Assembly.h"
 #include "../../InputOutput.h"
 
 static const VersionType AssemblyVersion = 1;
 
+static inline int GetRegisterId(const char* reg);
 static inline char* CopyLine(const char* source, char* target);
 static inline char* AddSpecificationInfo(char* byteCode);
+
+//------------Printing commands--------------
+static inline char* SprintfPush(char* byteCode, LineType* asmCode);
+static inline char* SprintfPop (char* byteCode, LineType* asmCode);
+
+//------------Consts------------------
+static const size_t MaxRegisterNameLength = 5;
 
 CommandsErrors Assembly(FILE* inStream, FILE* outStream)
 {
@@ -30,7 +39,9 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
         sscanf(asmCode.lines[line].line, "%s", command);
 
         if (strcmp(command, PUSH) == 0)
-            byteCodePtr += sprintf(byteCodePtr, "%d", (int) Commands::PUSH_ID);
+            byteCodePtr = SprintfPush(byteCodePtr, &asmCode.lines[line]);
+        else if (strcmp(command, POP) == 0)
+            byteCodePtr = SprintfPop(byteCodePtr, &asmCode.lines[line]);
         else if (strcmp(command, IN) == 0)
             byteCodePtr += sprintf(byteCodePtr, "%d", (int) Commands::IN_ID);
         else if (strcmp(command, DIV) == 0)
@@ -74,6 +85,48 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
     return CommandsErrors::NO_ERR;
 }
 
+static inline char* SprintfPush(char* byteCode, LineType* asmCode)
+{
+    assert(byteCode);
+    assert(asmCode);
+
+    static char registerName[MaxRegisterNameLength] = "";
+
+    int scanfResult = sscanf(asmCode->line + strlen(PUSH), "%s", registerName);
+    int registerId  = GetRegisterId(registerName);
+
+    if (scanfResult == 0 || registerId == -1)
+    {
+        byteCode += sprintf(byteCode, "%d", (int) Commands::PUSH_ID);
+        return byteCode;
+    }
+    
+    byteCode += sprintf(byteCode, "%d %d", (int) Commands::PUSH_REGISTER_ID, registerId);
+
+    return byteCode;
+}
+
+static inline char* SprintfPop(char* byteCode, LineType* asmCode)
+{
+    assert(byteCode);
+    assert(asmCode);
+
+    static char registerName[MaxRegisterNameLength] = "";
+
+    int scanfResult = sscanf(asmCode->line + strlen(POP), "%s", registerName);
+    int registerId  = GetRegisterId(registerName);
+
+    if (scanfResult == 0 || registerId == -1)
+    {
+        byteCode += sprintf(byteCode, "%d", (int) Commands::POP_ID);
+        return byteCode;
+    }
+
+    byteCode += sprintf(byteCode, "%d %d", (int) Commands::PUSH_REGISTER_ID, registerId);
+
+    return byteCode;
+}
+
 static inline char* CopyLine(const char* source, char* target)
 {
     assert(source);
@@ -82,8 +135,15 @@ static inline char* CopyLine(const char* source, char* target)
     const char* srcPtr  = source;
           char* targPtr = target;
     
+    
     while (*srcPtr != '\n' && *srcPtr != '\0')
     {
+        if (isalpha(*srcPtr))
+        {
+            ++srcPtr;
+            continue;
+        }
+
         *targPtr = *srcPtr;
 
         ++targPtr;
@@ -105,4 +165,17 @@ static inline char* AddSpecificationInfo(char* byteCode)
     assert((size_t) addedInfoSizeof == AddedInfoSizeByteCode);
 
     return byteCode + addedInfoSizeof;
+}
+
+static inline int GetRegisterId(const char* reg)
+{
+    assert(reg);
+
+    if (strlen(reg) != RegisterLength)
+        return -1;
+    
+    if (reg[0] != 'r' || reg[2] != 'x' || reg[1] > 'd' || reg[1] < 'a')
+        return -1;
+    
+    return reg[1] - 'a';
 }

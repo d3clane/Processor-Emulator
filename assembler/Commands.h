@@ -34,6 +34,8 @@ static const size_t NumberOfRegisters = 4;
 static const char* const PUSH   = "push";
 static const char* const IN     =   "in";
 
+static const char* const POP    =  "pop";
+
 static const char* const DIV    =  "div";
 static const char* const MUL    =  "mul";
 static const char* const SUB    =  "sub";
@@ -42,11 +44,18 @@ static const char* const ADD    =  "add";
 static const char* const OUT    =  "out";
 static const char* const HLT    =  "hlt";
 
+static const char* Registers[] = {"rax", "rbx", "rcx", "rdx"};
+
+static const size_t RegisterLength = 3;
+
 enum class Commands
 {
+    PUSH_REGISTER_ID,
     PUSH_ID,
     IN_ID,
 
+    POP_ID,
+    
     MUL_ID,
     ADD_ID, 
     DIV_ID,
