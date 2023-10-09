@@ -28,8 +28,6 @@ static const size_t AddedInfoSizeByteCode         = 10 + 1 + 1  + 1;
             
 static const size_t AddedInfoNumberOfLines = 2;
 
-static const size_t NumberOfRegisters = 4;
-
 //TODO подумать че сделать с этими константами
 static const char* const PUSH   = "push";
 static const char* const IN     =   "in";
@@ -44,6 +42,7 @@ static const char* const ADD    =  "add";
 static const char* const OUT    =  "out";
 static const char* const HLT    =  "hlt";
 
+static const size_t NumberOfRegisters    = 4;      
 static const size_t RegisterStringLength = 3;
 
 enum class Commands
