@@ -9,6 +9,7 @@ enum class CommandsErrors
 {
     NO_ERR,
 
+    INVALID_COMMAND_SYNTAX,
     INVALID_COMMAND_STRING,
     INVALID_COMMAND_ID,
 
@@ -16,18 +17,16 @@ enum class CommandsErrors
     INVALID_VERSIONS,
 };
 
-typedef uint32_t SignatureType;
-typedef uint32_t VersionType;
+typedef int SignatureType;
+typedef int VersionType;
 
 #pragma GCC diagnostic ignored "-Wmultichar"
 static const SignatureType Signature = 'COCK';
 #pragma GCC diagnostic warning "-Wmultichar"
 
 // Signature in chars(10) + new line(1) + version in chars(1) + new line(1)
-static const size_t AddedInfoSizeByteCode         = 10 + 1 + 1  + 1;
+static const size_t AddedInfoSizeByteCode         = 2;
             
-static const size_t AddedInfoNumberOfLines = 2;
-
 //TODO подумать че сделать с этими константами
 static const char* const PUSH   = "push";
 static const char* const IN     =   "in";
@@ -80,26 +79,30 @@ inline void CommandsErrorsLogError(CommandsErrors error, const char* fileName,
 
     switch(error)
     {
-        case CommandsErrors::NO_ERR:
-            break;
+    case CommandsErrors::NO_ERR:
+        break;
 
-        case CommandsErrors::INVALID_COMMAND_ID:
-            LOG_ERR("Invalid command id in byte-code file.\n");
-            break;
-        case CommandsErrors::INVALID_COMMAND_STRING:
-            LOG_ERR("Invalid command string in assembler file.\n");
-            break;
+    case CommandsErrors::INVALID_COMMAND_ID:
+        LOG_ERR("Invalid command id in byte-code file.\n");
+        break;
+    case CommandsErrors::INVALID_COMMAND_STRING:
+        LOG_ERR("Invalid command string in assembler file.\n");
+        break;
 
-        case CommandsErrors::INVALID_VERSIONS:
-            LOG_ERR("Disassembler and assembler versions doesn't match.\n");
-            break;
-        case CommandsErrors::INVALID_SIGNATURE:
-            LOG_ERR("Wrong signature in file. Can't disassembler.\n");
-            break;
+    case CommandsErrors::INVALID_VERSIONS:
+        LOG_ERR("Disassembler and assembler versions doesn't match.\n");
+        break;
+    case CommandsErrors::INVALID_SIGNATURE:
+        LOG_ERR("Wrong signature in file. Can't disassembler.\n");
+        break;
+    
+    case CommandsErrors::INVALID_COMMAND_SYNTAX:
+        LOG_ERR("Invalid syntax.\n");
+        break;
 
-        default:
-            LOG_ERR("Unknown error.\n");
-            break;
+    default:
+        LOG_ERR("Unknown error.\n");
+        break;
     }    
 
     LOG_END();
