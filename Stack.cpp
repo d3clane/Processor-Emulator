@@ -298,7 +298,7 @@ StackErrorsType StackPop(StackType* stk, ElemType* retVal)
     }
 
     --stk->size;
-    if (retVal) *retVal = stk->data[stk->size]; //ТУТ БАГ БЫЛ ПОМЕНЯТЬ В ОСНОВНОМ СТЕКЕ
+    if (retVal) *retVal = stk->data[stk->size];
     stk->data[stk->size] = POISON;
 
     ON_HASH
