@@ -648,6 +648,10 @@ void SpuErrorsLogError(SpuErrors error, const char* fileName,
         case SpuErrors::INVALID_VERSION:
             LOG_ERR("Invalid version.\n");
             break;
+
+        case SpuErrors::INVALID_REGISTER:
+            LOG_ERR("Invalid register id.\n");
+            break;
         
         //TODO: add new errors
         default:
