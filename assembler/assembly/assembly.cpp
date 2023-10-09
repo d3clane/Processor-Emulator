@@ -122,7 +122,7 @@ static inline char* SprintfPop(char* byteCode, LineType* asmCode)
         return byteCode;
     }
 
-    byteCode += sprintf(byteCode, "%d %d", (int) Commands::PUSH_REGISTER_ID, registerId);
+    byteCode += sprintf(byteCode, "%d %d", (int) Commands::POP_ID, registerId);
 
     return byteCode;
 }
