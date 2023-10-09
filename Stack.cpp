@@ -49,8 +49,8 @@ static inline bool StackIsTooBig(StackType* stk);
 
     static inline ElemType* GetSecondCanaryAdr(const StackType* const stk)
     {
-        return (ElemType*)(char*)(stk->data + stk->capacity) +
-                           Aligning - (stk->capacity * sizeof(ElemType)) % Aligning;
+        return (ElemType*)((char*)(stk->data + stk->capacity) +
+                           Aligning - (stk->capacity * sizeof(ElemType)) % Aligning);
     }
 
 #endif
@@ -378,6 +378,7 @@ StackErrorsType StackVerify(StackType* stk)
             errors = AddError(errors, StackErrors::STACK_INVALID_CANARY);
                       StackPrintError(StackErrors::STACK_INVALID_CANARY);
         }
+
     )
 
     //------------Hash checking----------
@@ -402,6 +403,11 @@ StackErrorsType StackVerify(StackType* stk)
         }
     )
 
+    if (errors)
+    {
+        STACK_DUMP(stk);
+    }
+    
     return errors;
 }
 
@@ -550,7 +556,7 @@ static inline ElemType* MovePtr(ElemType* const data, const size_t moveSz, const
     assert(data);
     assert(moveSz > 0);
     
-return (ElemType*)((char*)data + times * (long long)moveSz);
+    return (ElemType*)((char*)data + times * (long long)moveSz);
 }
 
 // NO stack check because doesn't fill hashes
@@ -559,8 +565,6 @@ static void StackDataFill(StackType* const stk)
     assert(stk);
     assert(stk->data);
     assert(stk->capacity > 0);
-
-    // NO stack check because called to fill not ok stack
 
     ON_CANARY
     (
