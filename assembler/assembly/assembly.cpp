@@ -8,15 +8,17 @@
 static const VersionType AssemblyVersion = 1;
 
 static inline int GetRegisterId(const char* reg);
-static inline char* CopyLine(const char* source, char* target);
-static inline char* AddSpecificationInfo(char* byteCode);
+static inline int* CopyArgument(const char* source, int* target);
+static inline int* AddSpecificationInfo(int* byteCode);
 
-//------------Printing commands--------------
-static inline char* SprintfPush(char* byteCode, LineType* asmCode);
-static inline char* SprintfPop (char* byteCode, LineType* asmCode);
+//------------Writing to array commands--------------
+static inline int* WritePushCommand(int* byteCode, LineType* asmCode);
+static inline int* WritePopCommand (int* byteCode, LineType* asmCode);
+
+//-----------Printing commands---------------
+static inline void PrintByteCode(int* byteCode, const size_t length, FILE* outStream);
 
 //------------Consts------------------
-static const size_t MaxRegisterNameLength = 5;
 
 CommandsErrors Assembly(FILE* inStream, FILE* outStream)
 {
@@ -26,8 +28,8 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
     TextType asmCode = {};
     TextTypeCtor(&asmCode, inStream);
 
-    char* byteCode    = (char*) calloc(asmCode.textSz + AddedInfoSizeByteCode, sizeof(*byteCode));
-    char* byteCodePtr = byteCode;
+    int* byteCode    = (int*) calloc(asmCode.textSz + AddedInfoSizeByteCode, sizeof(*byteCode));
+    int* byteCodePtr = byteCode;
 
     byteCodePtr = AddSpecificationInfo(byteCodePtr);
 
@@ -39,24 +41,24 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
         sscanf(asmCode.lines[line].line, "%s", command);
 
         if (strcmp(command, PUSH) == 0)
-            byteCodePtr = SprintfPush(byteCodePtr, &asmCode.lines[line]);
+            byteCodePtr = WritePushCommand(byteCodePtr, &asmCode.lines[line]);
         else if (strcmp(command, POP) == 0)
-            byteCodePtr = SprintfPop(byteCodePtr, &asmCode.lines[line]);
+            byteCodePtr = WritePopCommand(byteCodePtr, &asmCode.lines[line]);
         else if (strcmp(command, IN) == 0)
-            byteCodePtr += sprintf(byteCodePtr, "%d", (int) Commands::IN_ID);
+            *byteCodePtr++ = (int)Commands::IN_ID;
         else if (strcmp(command, DIV) == 0)
-            byteCodePtr += sprintf(byteCodePtr, "%d", (int) Commands::DIV_ID);
+            *byteCodePtr++ = (int)Commands::DIV_ID;
         else if (strcmp(command, MUL) == 0)
-            byteCodePtr += sprintf(byteCodePtr, "%d", (int) Commands::MUL_ID);
+            *byteCodePtr++ = (int)Commands::MUL_ID;
         else if (strcmp(command, SUB) == 0)
-            byteCodePtr += sprintf(byteCodePtr, "%d", (int) Commands::SUB_ID);
+            *byteCodePtr++ = (int)Commands::SUB_ID;
         else if (strcmp(command, ADD) == 0)
-            byteCodePtr += sprintf(byteCodePtr, "%d", (int) Commands::ADD_ID);
+            *byteCodePtr++ = (int)Commands::ADD_ID;
         else if (strcmp(command, OUT) == 0)
-            byteCodePtr += sprintf(byteCodePtr, "%d", (int) Commands::OUT_ID);
+            *byteCodePtr++ = (int)Commands::OUT_ID;
         else if (strcmp(command, HLT) == 0)
         {
-            byteCodePtr += sprintf(byteCodePtr, "%d", (int) Commands::HLT_ID);
+            *byteCodePtr++ = (int)Commands::HLT_ID;
             break;  
         }
         else
@@ -71,10 +73,11 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
                                return CommandsErrors::INVALID_COMMAND_STRING;
         }
 
-        byteCodePtr = CopyLine(asmCode.lines[line].line + strlen(command), byteCodePtr);
+        byteCodePtr = CopyArgument(asmCode.lines[line].line + strlen(command), byteCodePtr);
     }
 
-    PrintText(byteCode, strlen(byteCode), outStream);
+    assert(byteCodePtr - byteCode > 0);
+    PrintByteCode(byteCode, (size_t)(byteCodePtr - byteCode), outStream);
 
     TextTypeDestructor(&asmCode);
 
@@ -85,86 +88,78 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
     return CommandsErrors::NO_ERR;
 }
 
-static inline char* SprintfPush(char* byteCode, LineType* asmCode)
+static inline int* WritePushCommand(int* byteCode, LineType* asmCode)
 {
     assert(byteCode);
     assert(asmCode);
 
-    static char registerName[MaxRegisterNameLength] = "";
+    static char registerName[RegisterStringLength + 1] = "";
 
     int scanfResult = sscanf(asmCode->line + strlen(PUSH), "%s", registerName);
     int registerId  = GetRegisterId(registerName);
 
     if (scanfResult == 0 || registerId == -1)
     {
-        byteCode += sprintf(byteCode, "%d", (int) Commands::PUSH_ID);
+        *byteCode++ = (int)Commands::PUSH_ID;
         return byteCode;
     }
     
-    byteCode += sprintf(byteCode, "%d %d", (int) Commands::PUSH_REGISTER_ID, registerId);
+    *byteCode++ = (int)Commands::PUSH_REGISTER_ID;
+    *byteCode++ = registerId;
 
     return byteCode;
 }
 
-static inline char* SprintfPop(char* byteCode, LineType* asmCode)
+static inline int* WritePopCommand (int* byteCode, LineType* asmCode)
 {
     assert(byteCode);
     assert(asmCode);
 
-    static char registerName[MaxRegisterNameLength] = "";
+    static char registerName[RegisterStringLength + 1] = "";
 
     int scanfResult = sscanf(asmCode->line + strlen(POP), "%s", registerName);
     int registerId  = GetRegisterId(registerName);
 
+    *byteCode++ = (int)Commands::POP_ID;
+
     if (scanfResult == 0 || registerId == -1)
     {
-        byteCode += sprintf(byteCode, "%d", (int) Commands::POP_ID);
+        COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_SYNTAX);
         return byteCode;
     }
 
-    byteCode += sprintf(byteCode, "%d %d", (int) Commands::POP_ID, registerId);
+    *byteCode++ = registerId;
 
     return byteCode;
 }
 
-static inline char* CopyLine(const char* source, char* target)
+static inline int* CopyArgument(const char* source, int* target)
 {
     assert(source);
     assert(target);
 
-    const char* srcPtr  = source;
-          char* targPtr = target;
-    
-    
-    while (*srcPtr != '\n' && *srcPtr != '\0')
-    {
-        if (isalpha(*srcPtr))
-        {
-            ++srcPtr;
-            continue;
-        }
-
-        *targPtr = *srcPtr;
-
-        ++targPtr;
-        ++srcPtr;
-    }
-
-    *targPtr = *srcPtr;
-    ++targPtr;
-
-    return targPtr;
+    int scanfResult = sscanf(source, "%d", target);
+    return target + scanfResult;
 }
 
-static inline char* AddSpecificationInfo(char* byteCode)
+static inline void PrintByteCode(int* byteCode, const size_t length, FILE* outStream)
+{
+    assert(byteCode);
+    assert(outStream);
+
+    size_t nWrite = fwrite(byteCode, sizeof(*byteCode), length, outStream);
+
+    assert(nWrite == length);
+}
+
+static inline int* AddSpecificationInfo(int* byteCode)
 {
     assert(byteCode);
 
-    int addedInfoSizeof = sprintf(byteCode, "%u\n%u\n", Signature, AssemblyVersion);
+    *byteCode++ = Signature;
+    *byteCode++ = AssemblyVersion;
 
-    assert((size_t) addedInfoSizeof == AddedInfoSizeByteCode);
-
-    return byteCode + addedInfoSizeof;
+    return byteCode;
 }
 
 static inline int GetRegisterId(const char* reg)

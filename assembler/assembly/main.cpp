@@ -16,9 +16,12 @@ int main(const int argc, const char* argv[])
         in = fopen("in.txt", "r");
     
     if (argc > 2)
-        out = fopen(argv[2], "w");
+        out = fopen(argv[2], "wb");
     else
-        out = fopen("out.txt", "w");
+        out = fopen("out.bin", "wb");
 
     Assembly(in, out);
+
+    fclose(in);
+    fclose(out);
 }
