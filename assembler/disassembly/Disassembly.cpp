@@ -11,6 +11,7 @@ static inline CommandsErrors FileVerify(TextType* byteCode);
 
 static inline char* CopyLine(const char* source, char* target);
 static inline size_t CopyRegister(const char* source, char** target);
+static inline char* SprintfRegisterName(char* targPtr, const size_t registerId);
 
 static const uint32_t DisassemblyVersion = 1;
 
@@ -161,12 +162,20 @@ static inline size_t CopyRegister(const char* source, char** target)
     int registerId  = -1;
     sscanf(source, "%d", &registerId);
 
-    if (0 <= registerId && registerId <= 2)
-        targPtr += sprintf(targPtr, "r%cx", 'a' + registerId);
+    if (0 <= registerId && registerId < NumberOfRegisters)
+        targPtr = SprintfRegisterName(targPtr, registerId);
 
     *target = targPtr;
 
     return 1; //TODO: обработать длину registerId как-нибудь по-адекватному, а не +1.
+}
+
+static inline char* SprintfRegisterName(char* targPtr, const size_t registerId)
+{
+    assert(targPtr);
+    assert(0 <= registerId && registerId < NumberOfRegisters);
+
+    return targPtr + sprintf(targPtr, "r%cx", 'a' + registerId);
 }
 
 static inline void SkipAddedInfo(TextType* byteCode)
