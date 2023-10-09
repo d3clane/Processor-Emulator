@@ -36,8 +36,11 @@ static SpuErrors SpuVerify(SpuType* spu);
 
 //--------------Spu commands--------------
 
-static SpuErrors CommandPush(SpuType* spu);
-static SpuErrors CommandIn(SpuType* spu);
+static SpuErrors CommandPushRegister(SpuType* spu);
+static SpuErrors CommandPush        (SpuType* spu);
+static SpuErrors CommandIn          (SpuType* spu);
+
+static SpuErrors CommandPop(SpuType* spu);
 
 static SpuErrors CommandDiv(SpuType* spu);
 static SpuErrors CommandMul(SpuType* spu);
@@ -112,12 +115,11 @@ SpuErrors Processing(FILE* inStream)
 
     SkipAddedInfo(&spu);
     
-    int command = -1;
-    
     SpuErrors SpuError = SpuErrors::NO_ERR;
 
     SPU_CHECK_PROCESSING_FUNCTION(spu);
 
+    int command = -1;
     while (true)
     {
         command = (int) strtol(spu.byteCodeArrayReadPtr, 
@@ -125,11 +127,21 @@ SpuErrors Processing(FILE* inStream)
                                10);
 
         bool quitCycle = false;
-
+        
+        //TODO: работу с регистрами
+        //Log("Command executing: %d\n", command);
+        //SPU_DUMP(&spu);
         switch((Commands) command)
         {
             case Commands::PUSH_ID:
                 SpuError = CommandPush(&spu);
+                break;
+            case Commands::PUSH_REGISTER_ID:
+                SpuError = CommandPushRegister(&spu);
+                break;
+            case Commands::POP_ID:
+                //printf("BLYA\n");
+                SpuError = CommandPop(&spu);
                 break;
             case Commands::IN_ID:
                 SpuError = CommandIn(&spu);
@@ -220,11 +232,10 @@ do                                                                              
 static SpuErrors CommandPush(SpuType* spu)
 {
     assert(spu);
-    assert(spu->byteCodeFile);
 
     SPU_CHECK(spu);
 
-    ElemType valueToPush = 0;
+    ElemType valueToPush = POISON;
 
     char* tmpByteCodePtr = nullptr;
     //TODO: in types.h add something to automatic call of strtox;
@@ -241,6 +252,76 @@ static SpuErrors CommandPush(SpuType* spu)
     RETURN_STACK_PUSH_ERR(spu, valueToPush);
 }
 
+static SpuErrors CommandPushRegister(SpuType* spu)
+{
+    assert(spu);
+    
+    SPU_CHECK(spu);
+
+    size_t registerId = NumberOfRegisters + 1;
+
+    char* tmpByteCodePtr = nullptr;
+    registerId = strtol(spu->byteCodeArrayReadPtr, &tmpByteCodePtr, 10);
+
+    if (tmpByteCodePtr == spu->byteCodeArrayReadPtr)
+    {
+        SPU_ERRORS_LOG_ERROR(SpuErrors::READING_FROM_BYTE_CODE_ERR);
+                      return SpuErrors::READING_FROM_BYTE_CODE_ERR;
+    }
+
+    if (registerId < 0 || registerId >= NumberOfRegisters)
+    {
+        SPU_ERRORS_LOG_ERROR(SpuErrors::INVALID_REGISTER);
+                      return SpuErrors::INVALID_REGISTER;
+    }
+
+    spu->byteCodeArrayReadPtr = tmpByteCodePtr;
+
+    assert(0 <= registerId && registerId < NumberOfRegisters);
+
+    RETURN_STACK_PUSH_ERR(spu, spu->registers[registerId]);
+}
+
+static SpuErrors CommandPop(SpuType* spu)
+{
+    assert(spu);
+
+    SPU_CHECK(spu);
+
+    size_t registerId = NumberOfRegisters + 1;
+
+    char* tmpByteCodePtr = nullptr;
+    registerId = strtol(spu->byteCodeArrayReadPtr, &tmpByteCodePtr, 10);
+
+    if (tmpByteCodePtr == spu->byteCodeArrayReadPtr)
+    {
+        SPU_ERRORS_LOG_ERROR(SpuErrors::READING_FROM_BYTE_CODE_ERR);
+                      return SpuErrors::READING_FROM_BYTE_CODE_ERR;
+    }
+
+    if (registerId < 0 || registerId >= NumberOfRegisters)
+    {
+        SPU_ERRORS_LOG_ERROR(SpuErrors::INVALID_REGISTER);
+                      return SpuErrors::INVALID_REGISTER;
+    }
+
+    assert(0 <= registerId && registerId < NumberOfRegisters);
+
+    spu->byteCodeArrayReadPtr = tmpByteCodePtr;
+
+    StackErrorsType stackError = StackPop(&spu->stack, &spu->registers[registerId]);
+
+    if (stackError)
+    {
+        SPU_ERRORS_LOG_ERROR(SpuErrors::STACK_ERR);
+                      return SpuErrors::STACK_ERR;
+    }
+
+    SPU_CHECK(spu);
+
+    return SpuErrors::NO_ERR;
+}
+
 static SpuErrors CommandIn(SpuType* spu)
 {
     assert(spu);
@@ -248,7 +329,9 @@ static SpuErrors CommandIn(SpuType* spu)
 
     SPU_CHECK(spu);
 
-    ElemType valueToPush = 0;
+    ElemType valueToPush = POISON;
+    
+    printf("Value: ");
     int scanfResult = scanf(ElemTypeFormat, &valueToPush);
 
     if (scanfResult != 1)
@@ -450,8 +533,8 @@ static SpuErrors SpuDtor(SpuType* spu)
 }
 
 static SpuErrors SpuDump(SpuType* spu, const char* fileName,
-                                                   const char* funcName,
-                                                   const int line)
+                                       const char* funcName,
+                                       const int line)
 {
     assert(spu);
 

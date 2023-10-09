@@ -22,6 +22,8 @@ enum class SpuErrors
 
     INVALID_VERSION,
     INVALID_SIGNATURE,
+
+    INVALID_REGISTER,
 };
 
 #define SPU_ERRORS_LOG_ERROR(ERROR) SpuErrorsLogError((ERROR), __FILE__, \
