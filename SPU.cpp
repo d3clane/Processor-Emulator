@@ -255,7 +255,7 @@ static SpuErrors CommandPush(SpuType* spu)
 static SpuErrors CommandPushRegister(SpuType* spu)
 {
     assert(spu);
-    
+
     SPU_CHECK(spu);
 
     size_t registerId = NumberOfRegisters + 1;
