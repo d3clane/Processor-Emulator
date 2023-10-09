@@ -9,20 +9,32 @@
 #include <stdio.h>
 
 /// @brief ElemType for stack
-typedef double ElemType;
+typedef int ElemType;
 
 /// @brief Format for printing ElemType
 #undef  ElemTypeFormat
-#define ElemTypeFormat "%lf"
+#define ElemTypeFormat "%d"
 
 /// @brief Chosen POISON value for stack
-static const ElemType POISON = NAN;
+static const ElemType POISON = 0xBEEF;
 
 /// @brief Function for checking if two ElemType values are equal 
 /// @param [in]a first value
 /// @param [in]b second value
 /// @return true if they are equal otherwise false
 static inline bool Equal(const ElemType* const a, const ElemType* const b)
+{
+    assert(a);
+    assert(b);
+
+    return a == b;
+}
+
+static inline bool IsValidValue(const ElemType* value)
+{
+    return !Equal(value, &POISON);
+}
+/*static inline bool Equal(const ElemType* const a, const ElemType* const b)
 {
     assert(a);
     assert(b);
@@ -45,6 +57,6 @@ static inline bool Equal(const ElemType* const a, const ElemType* const b)
 static inline bool IsValidValue(const ElemType* value)
 {
     return isfinite(*value);
-}
+}*/
 
 #endif // TYPES_H
