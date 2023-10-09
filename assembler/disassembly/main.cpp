@@ -13,7 +13,7 @@ int main(const int argc, const char* argv[])
     if (argc > 1)
         in = fopen(argv[1], "r");
     else
-        in = fopen("in.txt", "r");
+        in = fopen("in.bin", "rb");
 
     if (argc > 2)
         out = fopen(argv[2], "w");
