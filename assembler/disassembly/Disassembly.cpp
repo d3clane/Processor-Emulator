@@ -5,13 +5,15 @@
 #include "Disassembly.h"
 #include "../../InputOutput.h"
 
-static inline void SkipAddedInfo(TextType* byteCode);
-static inline void MoveToTheByteCodeStart(TextType* byteCode);
-static inline CommandsErrors FileVerify(TextType* byteCode);
+static inline int* SkipAddedInfo(int* byteCode);
+static inline int* MoveToTheByteCodeStart(int* byteCode);
+static inline CommandsErrors FileVerify(int* byteCode);
 
-static inline char* CopyLine(const char* source, char* target);
-static inline size_t CopyRegister(const char* source, char** target);
+static inline size_t CopyArgument(const int* source, char* target, char** targetEndPtr);
+static inline size_t CopyRegister(const int* source, char* target, char** targetEndPtr);
 static inline char* SprintfRegisterName(char* targPtr, const size_t registerId);
+
+static inline int* ReadByteCode(FILE* inStream, size_t* byteCodeSize);
 
 static const uint32_t DisassemblyVersion = 1;
 
@@ -20,10 +22,11 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
     assert(inStream);
     assert(outStream);
 
-    TextType byteCode = {};
-    TextTypeCtor(&byteCode, inStream);
+    size_t byteCodeSize = 0;
+    int* byteCode    = ReadByteCode(inStream, &byteCodeSize);
+    int* byteCodePtr = byteCode;
 
-    CommandsErrors addedInfoErrors = FileVerify(&byteCode);
+    CommandsErrors addedInfoErrors = FileVerify(byteCode);
 
     if (addedInfoErrors != CommandsErrors::NO_ERR)
     {
@@ -31,96 +34,86 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
                            return addedInfoErrors;
     }
 
-    SkipAddedInfo(&byteCode);
+    byteCodePtr = SkipAddedInfo(byteCodePtr);
 
     static const size_t maxCommandLength = 8; //including register length
-    //TODO: change on reading from the beginning of the file for example
-    char* asmCode    = (char*) calloc(byteCode.textSz * maxCommandLength, sizeof(*asmCode));
+    //TODO: change on reading from the beginning of the file for example (all size of the unassemblered)
+    char* asmCode    = (char*) calloc(byteCodeSize * maxCommandLength, sizeof(char));
     char* asmCodePtr = asmCode;
 
-    for (size_t line = 0; line < byteCode.linesCnt; ++line)
+    while (true)
     {
-        int command = -1;
+        int command    = *byteCodePtr;
+        byteCodePtr++;
         bool quitCycle = false;
 
-        size_t readCommandLength = 0; //TODO: можно короче бинарный файл и удобнее будет
-        sscanf(byteCode.lines[line].line, "%d", &command);
-
-        assert(asmCodePtr < asmCode + byteCode.textSz * maxCommandLength);
-
+        assert(asmCodePtr < asmCode + byteCodeSize * maxCommandLength);
+        
         switch((Commands) command)
         {
-            case Commands::PUSH_ID:
-                asmCodePtr += sprintf(asmCodePtr, "%s", PUSH);
-                readCommandLength = 1;
-                break;
-            case Commands::PUSH_REGISTER_ID:
-            {
-                asmCodePtr += sprintf(asmCodePtr, "%s ", PUSH);
-                readCommandLength = 1;
-                size_t regLength = CopyRegister(byteCode.lines[line].line + readCommandLength, &asmCodePtr);
-                readCommandLength += 1 + regLength; //1 is because of the '\n' symbol
-                break;
-            }
-            case Commands::POP_ID:
-            {
-                asmCodePtr += sprintf(asmCodePtr, "%s ", POP);
-                readCommandLength = 1;
-                size_t regLength = CopyRegister(byteCode.lines[line].line + readCommandLength, &asmCodePtr);
-                readCommandLength += 1 + regLength;
-                break;
-            }
-            case Commands::IN_ID:
-                asmCodePtr += sprintf(asmCodePtr, "%s", IN);
-                readCommandLength = 1;
-                break;
-            case Commands::DIV_ID:
-                asmCodePtr += sprintf(asmCodePtr, "%s", DIV);
-                readCommandLength = 1;
-                break;
-            case Commands::ADD_ID:
-                asmCodePtr += sprintf(asmCodePtr, "%s", ADD);
-                readCommandLength = 1;
-                break;
-            case Commands::SUB_ID:
-                asmCodePtr += sprintf(asmCodePtr, "%s", SUB);
-                readCommandLength = 1;
-                break;
-            case Commands::MUL_ID:
-                asmCodePtr += sprintf(asmCodePtr, "%s", MUL);
-                readCommandLength = 1;
-                break;
-            case Commands::OUT_ID:
-                asmCodePtr += sprintf(asmCodePtr, "%s", OUT);
-                readCommandLength = 1;
-                break;
-            case Commands::HLT_ID:
-                asmCodePtr += sprintf(asmCodePtr, "%s", HLT);
-                readCommandLength = 1;
-                quitCycle = true;
-                break;
-            default:
-                COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_ID);
+        case Commands::PUSH_ID:
+            asmCodePtr  += sprintf(asmCodePtr, "%s ", PUSH);
+            byteCodePtr += CopyArgument(byteCodePtr, asmCodePtr, &asmCodePtr);
+            break;
+        case Commands::PUSH_REGISTER_ID:
+            asmCodePtr  += sprintf(asmCodePtr, "%s ", PUSH);
+            byteCodePtr += CopyRegister(byteCodePtr, asmCodePtr, &asmCodePtr);
+            break;
+        case Commands::POP_ID:
+            asmCodePtr  += sprintf(asmCodePtr, "%s ", POP);
+            byteCodePtr += CopyRegister(byteCodePtr, asmCodePtr, &asmCodePtr);
+            break;
+        
+        case Commands::IN_ID:
+            asmCodePtr += sprintf(asmCodePtr, "%s", IN);
+            break;
+        case Commands::DIV_ID:
+            asmCodePtr += sprintf(asmCodePtr, "%s", DIV);
+            break;
+        case Commands::ADD_ID:
+            asmCodePtr += sprintf(asmCodePtr, "%s", ADD);
+            break;
+        case Commands::SUB_ID:
+            asmCodePtr += sprintf(asmCodePtr, "%s", SUB);
+            break;
+        case Commands::MUL_ID:
+            asmCodePtr += sprintf(asmCodePtr, "%s", MUL);
+            break;
+        case Commands::OUT_ID:
+            asmCodePtr += sprintf(asmCodePtr, "%s", OUT);
+            break;
+        case Commands::HLT_ID:
+            asmCodePtr += sprintf(asmCodePtr, "%s", HLT);
+            quitCycle = true;
+            break;
 
-                TextTypeDestructor(&byteCode);
+        default:
+            COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_ID);
 
-                free(asmCode);
-                asmCode    = nullptr;
-                asmCodePtr = nullptr;
+            free(byteCode);
+            free(asmCode);
 
-                return CommandsErrors::INVALID_COMMAND_ID;
+            byteCode    = nullptr;
+            byteCodePtr = nullptr;
+
+            asmCode    = nullptr;
+            asmCodePtr = nullptr;
+
+            return CommandsErrors::INVALID_COMMAND_ID;
         }
+        
+        *asmCodePtr++ = '\n';
 
         if (quitCycle)
             break;
-
-        asmCodePtr = CopyLine(byteCode.lines[line].line + readCommandLength, asmCodePtr);
     }
 
-    PrintText(asmCode, strlen(asmCode), outStream);
+    assert(asmCodePtr >= asmCode);
+    PrintText(asmCode, (size_t)(asmCodePtr - asmCode), outStream);
 
-    MoveToTheByteCodeStart(&byteCode);
-    TextTypeDestructor(&byteCode);
+    free(byteCode);
+    byteCode    = nullptr;
+    byteCodePtr = nullptr;
 
     free(asmCode);
     asmCode    = nullptr;
@@ -129,45 +122,39 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
     return CommandsErrors::NO_ERR;
 }
 
-static inline char* CopyLine(const char* source, char* target)
+static inline size_t CopyArgument(const int* source, char* target, char** targetEndPtr)
 {
     assert(source);
     assert(target);
+    assert(targetEndPtr);
+    assert(*targetEndPtr);
 
-    const char* srcPtr  = source;
-          char* targPtr = target;
-    
-    while (*srcPtr != '\n' && *srcPtr != '\0')
-    {
-        *targPtr = *srcPtr;
+    char* targPtr = target;
 
-        ++targPtr;
-        ++srcPtr;
-    }
+    targPtr += sprintf(targPtr, "%d", *source);
 
-    *targPtr = *srcPtr;
-    ++targPtr;
+    *targetEndPtr = targPtr;
 
-    return targPtr;
+    return 1;
 }
 
-static inline size_t CopyRegister(const char* source, char** target)
+static inline size_t CopyRegister(const int* source, char* target, char** targetEndPtr)
 {
     assert(source);
     assert(target);
-    assert(*target);
+    assert(targetEndPtr);
+    assert(*targetEndPtr);
 
-    char* targPtr = *target;
+    char* targPtr = target;
 
-    int registerId  = -1;
-    sscanf(source, "%d", &registerId);
+    int registerId  = *source;
 
     if (0 <= registerId && registerId < NumberOfRegisters)
-        targPtr = SprintfRegisterName(targPtr, registerId);
+        targPtr = SprintfRegisterName(targPtr, (size_t)registerId);
 
-    *target = targPtr;
+    *targetEndPtr = targPtr;
 
-    return 1; //TODO: обработать длину registerId как-нибудь по-адекватному, а не +1.
+    return 1;
 }
 
 static inline char* SprintfRegisterName(char* targPtr, const size_t registerId)
@@ -175,38 +162,28 @@ static inline char* SprintfRegisterName(char* targPtr, const size_t registerId)
     assert(targPtr);
     assert(0 <= registerId && registerId < NumberOfRegisters);
 
-    return targPtr + sprintf(targPtr, "r%cx", 'a' + registerId);
+    return targPtr + sprintf(targPtr, "r%cx",(char)('a' + registerId));
 }
 
-static inline void SkipAddedInfo(TextType* byteCode)
-{
-    assert(byteCode);
-    assert(byteCode->linesCnt >= AddedInfoNumberOfLines);
-
-    byteCode->lines    += AddedInfoNumberOfLines;
-    byteCode->linesCnt -= AddedInfoNumberOfLines;
-    
-    byteCode->text   += AddedInfoSizeByteCode;
-    byteCode->textSz -= AddedInfoSizeByteCode;
-}
-
-static inline void MoveToTheByteCodeStart(TextType* byteCode)
+static inline int* SkipAddedInfo(int* byteCode)
 {
     assert(byteCode);
 
-    byteCode->lines    -= AddedInfoNumberOfLines;
-    byteCode->linesCnt += AddedInfoNumberOfLines;
-
-    byteCode->text   -= AddedInfoSizeByteCode;
-    byteCode->textSz += AddedInfoSizeByteCode;
+    return byteCode + AddedInfoSizeByteCode;
 }
 
-static inline CommandsErrors FileVerify(TextType* byteCode)
+static inline int* MoveToTheByteCodeStart(int* byteCode)
 {
     assert(byteCode);
-    assert(byteCode->linesCnt > 1);
 
-    SignatureType fileSignature = (SignatureType) strtol(byteCode->lines[0].line, nullptr, 10);
+    return byteCode - AddedInfoSizeByteCode;
+}
+
+static inline CommandsErrors FileVerify(int* byteCode)
+{
+    assert(byteCode);
+
+    SignatureType fileSignature = byteCode[0];
     
     if (fileSignature != Signature)
     {
@@ -214,7 +191,7 @@ static inline CommandsErrors FileVerify(TextType* byteCode)
                            return CommandsErrors::INVALID_SIGNATURE; 
     }
     
-    VersionType fileVersion = (VersionType) strtol(byteCode->lines[1].line, nullptr, 10);
+    VersionType fileVersion = byteCode[1];
 
     if (fileVersion != DisassemblyVersion)
     {
@@ -223,4 +200,25 @@ static inline CommandsErrors FileVerify(TextType* byteCode)
     }
 
     return CommandsErrors::NO_ERR;
+}
+
+static inline int* ReadByteCode(FILE* inStream, size_t* byteCodeArrSize)
+{
+    assert(inStream);
+    size_t byteCodeFileSize = GetFileSize(inStream);
+
+    *byteCodeArrSize = byteCodeFileSize / sizeof(int) + 1;
+    int* byteCode = (int*) calloc(*byteCodeArrSize, sizeof(*byteCode));
+
+    fread(byteCode, sizeof(*byteCode), *byteCodeArrSize, inStream);
+
+    return byteCode;    
+}
+
+static inline void FreeByteCode(int* byteCode)
+{
+    assert(byteCode);
+
+    byteCode = MoveToTheByteCodeStart(byteCode);
+    free(byteCode);
 }
