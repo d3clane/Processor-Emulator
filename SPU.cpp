@@ -23,7 +23,8 @@ struct SpuType
     ElemType registers[NumberOfRegisters];
 };
 
-const size_t CalculatingPrecision = 1e3;
+const int CalculatingPrecision = 1e2
+;
 
 //--------------SpuType functions--------------
 
@@ -212,7 +213,7 @@ SpuErrors Processing(FILE* inStream)
 #define STACK_PUSH(SPU, VALUE_TO_PUSH)                           \
 do                                                                                \
 {                                                                                 \
-    StackErrorsType stackErr = StackPush(&(SPU)->stack, VALUE_TO_PUSH);     \
+    StackErrorsType stackErr = StackPush(&(SPU)->stack, (VALUE_TO_PUSH));     \
                                                                                   \
     if (stackErr)                                                                 \
     {                                                                             \
@@ -244,15 +245,15 @@ static SpuErrors CommandPushRegister(SpuType* spu)
 
     SPU_CHECK(spu);
 
-    size_t registerId = *spu->byteCodeArrayReadPtr++;
+    int registerId = *spu->byteCodeArrayReadPtr++;
 
-    if (registerId < 0 || registerId >= NumberOfRegisters)
+    if (registerId < 0 || (size_t)registerId >= NumberOfRegisters)
     {
         SPU_ERRORS_LOG_ERROR(SpuErrors::INVALID_REGISTER);
                       return SpuErrors::INVALID_REGISTER;
     }
 
-    assert(0 <= registerId && registerId < NumberOfRegisters);
+    assert(0 <= registerId && (size_t) registerId < NumberOfRegisters);
 
     STACK_PUSH(spu, spu->registers[registerId]);
 }
@@ -263,15 +264,15 @@ static SpuErrors CommandPop(SpuType* spu)
 
     SPU_CHECK(spu);
 
-    size_t registerId = *spu->byteCodeArrayReadPtr++;
+    int registerId = *spu->byteCodeArrayReadPtr++;
 
-    if (registerId < 0 || registerId >= NumberOfRegisters)
+    if (registerId < 0 || (size_t)registerId >= NumberOfRegisters)
     {
         SPU_ERRORS_LOG_ERROR(SpuErrors::INVALID_REGISTER);
                       return SpuErrors::INVALID_REGISTER;
     }
 
-    assert(0 <= registerId && registerId < NumberOfRegisters);
+    assert(0 <= registerId && (size_t)registerId < NumberOfRegisters);
 
     StackErrorsType stackError = StackPop(&spu->stack, &spu->registers[registerId]);
 
@@ -306,6 +307,7 @@ static SpuErrors CommandIn(SpuType* spu)
     
     valueToPush *= CalculatingPrecision;
 
+    printf("Entered value: %d\n", valueToPush);
     STACK_PUSH(spu, valueToPush);
 }
 
@@ -361,6 +363,7 @@ static SpuErrors CommandMul(SpuType* spu)
 
     VALUES_CHECK(firstValue, secondValue);
 
+    printf("Val1: %d, Val2: %d, Result1: %d\n", firstValue, secondValue, firstValue * secondValue / CalculatingPrecision);
     STACK_PUSH(spu, firstValue * secondValue / CalculatingPrecision);
 }
 
