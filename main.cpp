@@ -11,7 +11,7 @@ int main(const int argc, const char* const argv[])
     if (argc > 1)
         in = fopen(argv[1], "r");
     else
-        in = fopen("in.txt", "r");
+        in = fopen("in.bin", "rb");
 
     Processing(in);
 

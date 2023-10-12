@@ -13,8 +13,6 @@ static inline size_t CopyArgument(const int* source, char* target, char** target
 static inline size_t CopyRegister(const int* source, char* target, char** targetEndPtr);
 static inline char* SprintfRegisterName(char* targPtr, const size_t registerId);
 
-static inline int* ReadByteCode(FILE* inStream, size_t* byteCodeSize);
-
 static const uint32_t DisassemblyVersion = 1;
 
 CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
@@ -200,19 +198,6 @@ static inline CommandsErrors FileVerify(int* byteCode)
     }
 
     return CommandsErrors::NO_ERR;
-}
-
-static inline int* ReadByteCode(FILE* inStream, size_t* byteCodeArrSize)
-{
-    assert(inStream);
-    size_t byteCodeFileSize = GetFileSize(inStream);
-
-    *byteCodeArrSize = byteCodeFileSize / sizeof(int) + 1;
-    int* byteCode = (int*) calloc(*byteCodeArrSize, sizeof(*byteCode));
-
-    fread(byteCode, sizeof(*byteCode), *byteCodeArrSize, inStream);
-
-    return byteCode;    
 }
 
 static inline void FreeByteCode(int* byteCode)

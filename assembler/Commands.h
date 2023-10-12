@@ -2,6 +2,8 @@
 #define COMMANDS_H
 
 #include <assert.h>
+
+#include "../InputOutput.h"
 #include "../Errors.h"
 #include "../Log.h"
 
@@ -63,9 +65,9 @@ enum class Commands
 #define COMMANDS_ERRORS_LOG_ERROR(error) CommandsErrorsLogError(error,                          \
                                                                 __FILE__, __func__, __LINE__)
 
-inline void CommandsErrorsLogError(CommandsErrors error, const char* fileName, 
-                                                         const char* funcName, 
-                                                         const int line)
+static inline void CommandsErrorsLogError(CommandsErrors error, const char* fileName, 
+                                                                const char* funcName, 
+                                                                const int line)
 {
     assert(fileName);
     assert(funcName);
@@ -106,6 +108,20 @@ inline void CommandsErrorsLogError(CommandsErrors error, const char* fileName,
     }    
 
     LOG_END();
+}
+
+//TODO: пора создать Commands.cpp и туда пихать реализации, а то странно жесть
+static inline int* ReadByteCode(FILE* inStream, size_t* byteCodeArrSize)
+{
+    assert(inStream);
+    size_t byteCodeFileSize = GetFileSize(inStream);
+
+    *byteCodeArrSize = byteCodeFileSize / sizeof(int) + 1;
+    int* byteCode = (int*) calloc(*byteCodeArrSize, sizeof(*byteCode));
+
+    fread(byteCode, sizeof(*byteCode), *byteCodeArrSize, inStream);
+
+    return byteCode;    
 }
 
 #endif
