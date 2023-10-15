@@ -40,6 +40,18 @@ static const char* const MUL    =  "mul";
 static const char* const SUB    =  "sub";
 static const char* const ADD    =  "add";
 
+static const char* const SIN    =  "sin";
+static const char* const COS    =  "cos";
+static const char* const TAN    =  "tan";
+static const char* const COT    =  "cot";
+static const char* const SQRT   = "sqrt";
+static const char* const POW    =  "pow";
+
+static const char* const MEOW   = "meow";
+static const char* const BARK   = "bark";
+static const char* const SLEEP  = "sleep";
+static const char* const BOTAY  = "botay";
+
 static const char* const OUT    =  "out";
 static const char* const HLT    =  "hlt";
 
@@ -58,6 +70,19 @@ enum class Commands
     ADD_ID, 
     DIV_ID,
     SUB_ID,
+
+    SIN_ID,
+    COS_ID,
+    TAN_ID,
+    COT_ID,
+    SQRT_ID,
+    POW_ID,
+
+    MEOW_ID,
+    BARK_ID,
+    SLEEP_ID,
+    BOTAY_ID,
+
     OUT_ID,
     HLT_ID,
 };

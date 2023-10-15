@@ -54,8 +54,32 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
             *byteCodePtr++ = (int)Commands::SUB_ID;
         else if (strcmp(command, ADD) == 0)
             *byteCodePtr++ = (int)Commands::ADD_ID;
+    
+        else if (strcmp(command, SIN))
+            *byteCodePtr++ = (int)Commands::SIN_ID;
+        else if (strcmp(command, COS))
+            *byteCodePtr++ = (int)Commands::COS_ID;
+        else if (strcmp(command, TAN))
+            *byteCodePtr++ = (int)Commands::TAN_ID;
+        else if (strcmp(command, COT))
+            *byteCodePtr++ = (int)Commands::COT_ID;
+        else if (strcmp(command, SQRT))
+            *byteCodePtr++ = (int)Commands::SQRT_ID;
+        else if (strcmp(command, POW))
+            *byteCodePtr++ = (int)Commands::POW_ID;
+    
+        else if (strcmp(command, MEOW))
+            *byteCodePtr++ = (int)Commands::MEOW_ID;
+        else if (strcmp(command, BARK))
+            *byteCodePtr++ = (int)Commands::BARK_ID;
+        else if (strcmp(command, SLEEP))
+            *byteCodePtr++ = (int)Commands::SLEEP_ID;
+        else if (strcmp(command, BOTAY))
+            *byteCodePtr++ = (int)Commands::BOTAY_ID;
+
         else if (strcmp(command, OUT) == 0)
             *byteCodePtr++ = (int)Commands::OUT_ID;
+
         else if (strcmp(command, HLT) == 0)
         {
             *byteCodePtr++ = (int)Commands::HLT_ID;
