@@ -20,7 +20,7 @@ struct SpuType
     int* byteCodeArrayReadPtr;
     size_t byteCodeArraySize;
 
-    ElemType registers[NumberOfRegisters];
+    int registers[NumberOfRegisters];
 };
 
 const int CalculatingPrecision = 1e2
@@ -60,9 +60,9 @@ static inline SpuErrors SkipAddedInfo(SpuType* spu);
 
 //-----------Other functions-------------
 
-static SpuErrors GetTwoLastValuesFromStack(StackType* stack, ElemType* firstVal, ElemType* secondVal);
+static SpuErrors GetTwoLastValuesFromStack(StackType* stack, int* firstVal, int* secondVal);
 
-static inline bool IsValidValues(const ElemType* firstVal, const ElemType* secondVal);
+static inline bool IsValidValues(const int* firstVal, const int* secondVal);
 
 //-----------defines------------------
 
@@ -232,8 +232,8 @@ static SpuErrors CommandPush(SpuType* spu)
 
     SPU_CHECK(spu);
 
-    //TODO: можно будет просто все ElemType поменять на int потому что такая реализация...
-    ElemType valueToPush = *spu->byteCodeArrayReadPtr++;
+    //TODO: можно будет просто все int поменять на int потому что такая реализация...
+    int valueToPush = *spu->byteCodeArrayReadPtr++;
     valueToPush *= CalculatingPrecision;
 
     STACK_PUSH(spu, valueToPush);
@@ -294,7 +294,7 @@ static SpuErrors CommandIn(SpuType* spu)
 
     SPU_CHECK(spu);
 
-    ElemType valueToPush = POISON;
+    int valueToPush = POISON;
     
     printf("Enter value: ");
     int scanfResult = scanf(ElemTypeFormat, &valueToPush);
@@ -307,7 +307,6 @@ static SpuErrors CommandIn(SpuType* spu)
     
     valueToPush *= CalculatingPrecision;
 
-    printf("Entered value: %d\n", valueToPush);
     STACK_PUSH(spu, valueToPush);
 }
 
@@ -327,8 +326,8 @@ static SpuErrors CommandDiv(SpuType* spu)
 
     SPU_CHECK(spu);
 
-    ElemType secondValue = POISON;
-    ElemType firstValue  = POISON;
+    int secondValue = POISON;
+    int firstValue  = POISON;
 
     SpuErrors errors = GetTwoLastValuesFromStack(&spu->stack, &firstValue, &secondValue);
 
@@ -336,7 +335,7 @@ static SpuErrors CommandDiv(SpuType* spu)
     
     VALUES_CHECK(firstValue, secondValue);
 
-    const ElemType zero = 0; //хз как-то некрасиво выглядит
+    const int zero = 0; //хз как-то некрасиво выглядит
     if (!Equal(&secondValue, &zero))
     {        
         STACK_PUSH(spu, CalculatingPrecision * firstValue / secondValue);
@@ -354,8 +353,8 @@ static SpuErrors CommandMul(SpuType* spu)
 
     SPU_CHECK(spu);
 
-    ElemType secondValue = POISON;
-    ElemType firstValue  = POISON;
+    int secondValue = POISON;
+    int firstValue  = POISON;
 
     SpuErrors errors = GetTwoLastValuesFromStack(&spu->stack, &firstValue, &secondValue);
 
@@ -363,7 +362,6 @@ static SpuErrors CommandMul(SpuType* spu)
 
     VALUES_CHECK(firstValue, secondValue);
 
-    printf("Val1: %d, Val2: %d, Result1: %d\n", firstValue, secondValue, firstValue * secondValue / CalculatingPrecision);
     STACK_PUSH(spu, firstValue * secondValue / CalculatingPrecision);
 }
 
@@ -373,8 +371,8 @@ static SpuErrors CommandSub(SpuType* spu)
 
     SPU_CHECK(spu);
 
-    ElemType secondValue = POISON;
-    ElemType firstValue  = POISON;
+    int secondValue = POISON;
+    int firstValue  = POISON;
 
     SpuErrors errors = GetTwoLastValuesFromStack(&spu->stack, &firstValue, &secondValue);
 
@@ -391,8 +389,8 @@ static SpuErrors CommandAdd(SpuType* spu)
 
     SPU_CHECK(spu);
 
-    ElemType secondValue = POISON;
-    ElemType firstValue  = POISON;
+    int secondValue = POISON;
+    int firstValue  = POISON;
 
     SpuErrors errors = GetTwoLastValuesFromStack(&spu->stack, &firstValue, &secondValue);
 
@@ -411,27 +409,27 @@ static SpuErrors CommandOut(SpuType* spu)
 
     SPU_CHECK(spu);
 
-    ElemType equationResult = POISON;
+    int equationResult = POISON;
 
     StackErrorsType stackError = StackPop(&spu->stack, &equationResult);
 
     if (stackError)
     {
-        printf("Couldn't provide result. Getting result error occurred.\n");
+        printf("Couldn't calculate result. Getting result error occurred.\n");
         SPU_ERRORS_LOG_ERROR(SpuErrors::STACK_ERR);
                       return SpuErrors::STACK_ERR;
     }
 
     printf("Equation result: " "%lf" "\n", 1.0 * equationResult / CalculatingPrecision);
 
-    //Pushing back on stack for future using
+    //Pushing back on stack
     STACK_PUSH(spu, equationResult);
 }
 
 #undef STACK_PUSH
 #undef IF_ERR_RETURN
 
-static SpuErrors GetTwoLastValuesFromStack(StackType* stack, ElemType* firstVal, ElemType* secondVal)
+static SpuErrors GetTwoLastValuesFromStack(StackType* stack, int* firstVal, int* secondVal)
 {
     assert(stack);
     assert(firstVal);
@@ -449,7 +447,7 @@ static SpuErrors GetTwoLastValuesFromStack(StackType* stack, ElemType* firstVal,
     return SpuErrors::NO_ERR;
 }
 
-static inline bool IsValidValues(const ElemType* firstVal, const ElemType* secondVal)
+static inline bool IsValidValues(const int* firstVal, const int* secondVal)
 {
     return IsValidValue(firstVal) && IsValidValue(secondVal);
 }
