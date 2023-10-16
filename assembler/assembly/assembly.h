@@ -2,7 +2,7 @@
 #define ASSEMBLER_H
 
 #include <stdio.h>
-#include "../Commands.h"
+#include "../Common.h"
 
 CommandsErrors Assembly(FILE* inStream, FILE* outStream);
 
