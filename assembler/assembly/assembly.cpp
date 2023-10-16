@@ -12,6 +12,9 @@ static inline int* CopyArgument(const char* source, int* target);
 static inline int* AddSpecificationInfo(int* byteCode);
 
 //------------Writing to array commands--------------
+static inline int* CallFunctionWithArgs(const char* commandName, 
+                                    int* byteCode, LineType* asmCode);
+
 static inline int* WritePushCommand(int* byteCode, LineType* asmCode);
 static inline int* WritePopCommand (int* byteCode, LineType* asmCode);
 
@@ -19,6 +22,16 @@ static inline int* WritePopCommand (int* byteCode, LineType* asmCode);
 static inline void PrintByteCode(int* byteCode, const size_t length, FILE* outStream);
 
 //------------Consts------------------
+
+#define DEF_CMD(name, num, have_args, ...)                                                  \
+    if (strcasecmp(command, #name) == 0)                                                    \
+    {                                                                                       \
+        if (have_args)                                                                      \
+            byteCodePtr = CallFunctionWithArgs(command, byteCodePtr, &asmCode.lines[line]); \
+        else                                                                                \
+            *byteCodePtr++ = num;                                                           \
+    }                                                                                       \
+    else 
 
 CommandsErrors Assembly(FILE* inStream, FILE* outStream)
 {
@@ -30,7 +43,7 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
 
     int* byteCode    = (int*) calloc(asmCode.textSz + AddedInfoSizeByteCode, sizeof(*byteCode));
     int* byteCodePtr = byteCode;
-
+ 
     byteCodePtr = AddSpecificationInfo(byteCodePtr);
 
     static const size_t maxCommandLength  =  5;
@@ -40,52 +53,9 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
     {
         sscanf(asmCode.lines[line].line, "%s", command);
 
-        if (strcmp(command, PUSH) == 0)
-            byteCodePtr = WritePushCommand(byteCodePtr, &asmCode.lines[line]);
-        else if (strcmp(command, POP) == 0)
-            byteCodePtr = WritePopCommand(byteCodePtr, &asmCode.lines[line]);
-        else if (strcmp(command, IN) == 0)
-            *byteCodePtr++ = (int)Commands::IN_ID;
-        else if (strcmp(command, DIV) == 0)
-            *byteCodePtr++ = (int)Commands::DIV_ID;
-        else if (strcmp(command, MUL) == 0)
-            *byteCodePtr++ = (int)Commands::MUL_ID;
-        else if (strcmp(command, SUB) == 0)
-            *byteCodePtr++ = (int)Commands::SUB_ID;
-        else if (strcmp(command, ADD) == 0)
-            *byteCodePtr++ = (int)Commands::ADD_ID;
-    
-        else if (strcmp(command, SIN) == 0)
-            *byteCodePtr++ = (int)Commands::SIN_ID;
-        else if (strcmp(command, COS) == 0)
-            *byteCodePtr++ = (int)Commands::COS_ID;
-        else if (strcmp(command, TAN) == 0)
-            *byteCodePtr++ = (int)Commands::TAN_ID;
-        else if (strcmp(command, COT) == 0)
-            *byteCodePtr++ = (int)Commands::COT_ID;
-        else if (strcmp(command, SQRT) == 0)
-            *byteCodePtr++ = (int)Commands::SQRT_ID;
-        else if (strcmp(command, POW) == 0)
-            *byteCodePtr++ = (int)Commands::POW_ID;
-    
-        else if (strcmp(command, MEOW) == 0)
-            *byteCodePtr++ = (int)Commands::MEOW_ID;
-        else if (strcmp(command, BARK) == 0)
-            *byteCodePtr++ = (int)Commands::BARK_ID;
-        else if (strcmp(command, SLEEP) == 0)
-            *byteCodePtr++ = (int)Commands::SLEEP_ID;
-        else if (strcmp(command, BOTAY) == 0)
-            *byteCodePtr++ = (int)Commands::BOTAY_ID;
+        #include "../Commands.h"
 
-        else if (strcmp(command, OUT) == 0)
-            *byteCodePtr++ = (int)Commands::OUT_ID;
-
-        else if (strcmp(command, HLT) == 0)
-        {
-            *byteCodePtr++ = (int)Commands::HLT_ID;
-            break;  
-        }
-        else
+        /* else */
         {
             TextTypeDestructor(&asmCode);
 
@@ -97,6 +67,7 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
                                return CommandsErrors::INVALID_COMMAND_STRING;
         }
 
+        //TODO: перенести короче в копиаргумент перекопирование регистра (или наоборот убрать эту функцию подумать крч)
         byteCodePtr = CopyArgument(asmCode.lines[line].line + strlen(command), byteCodePtr);
     }
 
@@ -110,6 +81,23 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
     byteCodePtr = nullptr;
 
     return CommandsErrors::NO_ERR;
+}
+
+#undef DEF_CMD
+
+static inline int* CallFunctionWithArgs(const char* commandName, 
+                                    int* byteCode, LineType* asmCode)
+{
+    assert(commandName);
+    assert(byteCode);
+    assert(asmCode);
+
+    if (strcasecmp(commandName, PUSH))
+        return WritePushCommand(byteCode, asmCode);
+    else if (strcasecmp(commandName, POP))
+        return WritePopCommand(byteCode, asmCode);
+
+    return nullptr;
 }
 
 static inline int* WritePushCommand(int* byteCode, LineType* asmCode)
