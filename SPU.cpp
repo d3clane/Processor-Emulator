@@ -23,8 +23,7 @@ struct SpuType
     int registers[NumberOfRegisters];
 };
 
-const int CalculatingPrecision = 1e2
-;
+const int CalculatingPrecision = 1e2;
 
 //--------------SpuType functions--------------
 
@@ -40,18 +39,30 @@ static SpuErrors SpuVerify(SpuType* spu);
 
 //--------------Spu commands--------------
 
+
 static SpuErrors CommandPushRegister(SpuType* spu);
 static SpuErrors CommandPush        (SpuType* spu);
 static SpuErrors CommandIn          (SpuType* spu);
+static SpuErrors CommandPop         (SpuType* spu);
 
-static SpuErrors CommandPop(SpuType* spu);
+static inline SpuErrors CommandDiv(int inFirstValue, int inSecondValue, int* outValue);
+static inline SpuErrors CommandMul(int inFirstValue, int inSecondValue, int* outValue);
+static inline SpuErrors CommandSub(int inFirstValue, int inSecondValue, int* outValue);
+static inline SpuErrors CommandAdd(int inFirstValue, int inSecondValue, int* outValue);
 
-static SpuErrors CommandDiv(SpuType* spu);
-static SpuErrors CommandMul(SpuType* spu);
-static SpuErrors CommandSub(SpuType* spu);
-static SpuErrors CommandAdd(SpuType* spu);
+static inline SpuErrors CommandSin (int inValue, int* outValue);
+static inline SpuErrors CommandCos (int inValue, int* outValue);
+static inline SpuErrors CommandTan (int inValue, int* outValue);
+static inline SpuErrors CommandCot (int inValue, int* outValue);
+static inline SpuErrors CommandPow (int inValue, int* outValue);
+static inline SpuErrors CommandSqrt(int inValue, int* outValue);
 
-static SpuErrors CommandOut(SpuType* spu);
+static SpuErrors CommandMeow ();
+static SpuErrors CommandBark ();
+static SpuErrors CommandSleep();
+static SpuErrors CommandBotay();
+
+static inline SpuErrors CommandOut(int inValue, int* outValue);
 
 //----------Added info functions-------
 
@@ -60,6 +71,12 @@ static inline SpuErrors SkipAddedInfo(SpuType* spu);
 
 //-----------Other functions-------------
 
+typedef SpuErrors (CommandFuncType)(int value);
+
+static SpuErrors CallBinaryCommand(SpuErrors (*Command)(int, int, int*), SpuType* spu);
+static SpuErrors CallUnaryCommand (SpuErrors (*Command)(int,      int*), SpuType* spu);
+
+static SpuErrors GetStackLastValue(StackType* stack, int* value);
 static SpuErrors GetTwoLastValuesFromStack(StackType* stack, int* firstVal, int* secondVal);
 
 static inline bool IsValidValues(const int* firstVal, const int* secondVal);
@@ -77,7 +94,7 @@ do                                                                              
 } while (0)
 
 /// @brief Spu check with dtor
-#define SPU_CHECK_IN_PROCESSING_FUNCTION(SPU)          \
+#define SPU_CHECK(SPU)          \
 do                                                              \
 {                                                               \
     SpuErrors verifyingError = SpuVerify(&(SPU));   \
@@ -121,7 +138,7 @@ SpuErrors Processing(FILE* inStream)
     
     SpuErrors SpuError = SpuErrors::NO_ERR;
 
-    SPU_CHECK_IN_PROCESSING_FUNCTION(spu);
+    SPU_CHECK(spu);
 
     int command = -1;
     while (true)
@@ -131,48 +148,81 @@ SpuErrors Processing(FILE* inStream)
         command = *spu.byteCodeArrayReadPtr++;
         switch((Commands) command)
         {
-            case Commands::PUSH_ID:
-                SpuError = CommandPush(&spu);
-                break;
-            case Commands::PUSH_REGISTER_ID:
-                SpuError = CommandPushRegister(&spu);
-                break;
-            case Commands::POP_ID:
-                SpuError = CommandPop(&spu);
-                break;
-            case Commands::IN_ID:
-                SpuError = CommandIn(&spu);
-                break;
-            case Commands::DIV_ID:
-                SpuError = CommandDiv(&spu);
-                break;
-            case Commands::ADD_ID:
-                SpuError = CommandAdd(&spu);
-                break;
-            case Commands::SUB_ID:
-                SpuError = CommandSub(&spu);
-                break;
-            case Commands::MUL_ID:
-                SpuError = CommandMul(&spu);
-                break;
-            case Commands::OUT_ID:
-                SpuError = CommandOut(&spu);
-                break;
-            case Commands::HLT_ID:
-                quitCycle = true;
-                break;
-            default:
-                SpuError = SpuErrors::INVALID_COMMAND;
-                SPU_ERRORS_LOG_ERROR(SpuError);
+        case Commands::PUSH_ID:
+            SpuError = CommandPush(&spu);
+            break;
+        case Commands::PUSH_REGISTER_ID:
+            SpuError = CommandPushRegister(&spu);
+            break;
+        case Commands::POP_ID:
+            SpuError = CommandPop(&spu);
+            break;
+        case Commands::IN_ID:
+            SpuError = CommandIn(&spu);
+            break;
+        case Commands::DIV_ID:
+            SpuError = CallBinaryCommand(CommandDiv, &spu);
+            break;
+        case Commands::ADD_ID:
+            SpuError = CallBinaryCommand(CommandAdd, &spu);
+            break;
+        case Commands::SUB_ID:
+            SpuError = CallBinaryCommand(CommandSub, &spu);
+            break;
+        case Commands::MUL_ID:
+            SpuError = CallBinaryCommand(CommandMul, &spu);
+            break;
 
-                quitCycle = true;
-                break;
+        case Commands::SIN_ID:
+            CallUnaryCommand(CommandSin, &spu);
+            break;
+        case Commands::COS_ID:
+            CallUnaryCommand(CommandCos, &spu);
+            break;
+        case Commands::TAN_ID:
+            CallUnaryCommand(CommandTan, &spu);
+            break;
+        case Commands::COT_ID:
+            CallUnaryCommand(CommandCot, &spu);
+            break;  
+        case Commands::POW_ID:
+            CallUnaryCommand(CommandPow, &spu);
+            break;
+        case Commands::SQRT_ID:
+            CallUnaryCommand(CommandSqrt, &spu);
+            break;
+        
+        case Commands::MEOW_ID:
+            SpuError = CommandMeow();
+            break;
+        case Commands::BARK_ID:
+            SpuError = CommandBark();
+            break;
+        case Commands::SLEEP_ID:
+            SpuError = CommandSleep();
+            break;
+        case Commands::BOTAY_ID:
+            SpuError = CommandBotay();
+            break;
+        
+        case Commands::OUT_ID:
+            SpuError = CallUnaryCommand(CommandOut, &spu);
+            break;
+        case Commands::HLT_ID:
+            quitCycle = true;
+            break;
+        default:
+            SpuError = SpuErrors::INVALID_COMMAND;
+            SPU_ERRORS_LOG_ERROR(SpuError);
+
+            quitCycle = true;
+            break;
         }
 
         if (SpuError != SpuErrors::NO_ERR)
             break;
-        
-        SPU_CHECK_IN_PROCESSING_FUNCTION(spu);
+
+        SPU_CHECK(spu);
 
         if (quitCycle)
             break;
@@ -185,7 +235,7 @@ SpuErrors Processing(FILE* inStream)
     return SpuErrors::NO_ERR;
 }
 
-#undef SPU_CHECK_IN_PROCESSING_FUNCTION
+#undef SPU_CHECK
 
 /// @brief verifies spu and returns
 #ifndef NDEBUG
@@ -221,9 +271,6 @@ do                                                                              
                       return SpuErrors::STACK_ERR;                                \
     }                                                                             \
                                                                                   \
-    SPU_CHECK((SPU));                                                 \
-                                                                                  \
-    return SpuErrors::NO_ERR;                                                     \
 } while (0)
 
 static SpuErrors CommandPush(SpuType* spu)
@@ -232,11 +279,14 @@ static SpuErrors CommandPush(SpuType* spu)
 
     SPU_CHECK(spu);
 
-    //TODO: можно будет просто все int поменять на int потому что такая реализация...
     int valueToPush = *spu->byteCodeArrayReadPtr++;
     valueToPush *= CalculatingPrecision;
 
     STACK_PUSH(spu, valueToPush);
+
+    SPU_CHECK(spu);
+    
+    return SpuErrors::NO_ERR;
 }
 
 static SpuErrors CommandPushRegister(SpuType* spu)
@@ -256,6 +306,10 @@ static SpuErrors CommandPushRegister(SpuType* spu)
     assert(0 <= registerId && (size_t) registerId < NumberOfRegisters);
 
     STACK_PUSH(spu, spu->registers[registerId]);
+
+    SPU_CHECK(spu);
+
+    return SpuErrors::NO_ERR;
 }
 
 static SpuErrors CommandPop(SpuType* spu)
@@ -308,6 +362,10 @@ static SpuErrors CommandIn(SpuType* spu)
     valueToPush *= CalculatingPrecision;
 
     STACK_PUSH(spu, valueToPush);
+
+    SPU_CHECK(spu);
+    
+    return SpuErrors::NO_ERR;
 }
 
 #define VALUES_CHECK(FIRST_VALUE, SECOND_VALUE)                                   \
@@ -320,114 +378,251 @@ do                                                                              
     }                                                                             \
 } while (0)
 
-static SpuErrors CommandDiv(SpuType* spu)
+static inline SpuErrors CommandDiv(int inFirstValue, int inSecondValue, int* outValue)
 {
-    assert(spu);
+    assert(outValue);
 
-    SPU_CHECK(spu);
+    VALUES_CHECK(inFirstValue, inSecondValue);
 
-    int secondValue = POISON;
-    int firstValue  = POISON;
-
-    SpuErrors errors = GetTwoLastValuesFromStack(&spu->stack, &firstValue, &secondValue);
-
-    IF_ERR_RETURN(errors);
-    
-    VALUES_CHECK(firstValue, secondValue);
-
-    const int zero = 0; //хз как-то некрасиво выглядит
-    if (!Equal(&secondValue, &zero))
-    {        
-        STACK_PUSH(spu, CalculatingPrecision * firstValue / secondValue);
+    if (inSecondValue == 0)
+    {
+        *outValue = POISON;
+        SPU_ERRORS_LOG_ERROR(SpuErrors::TRYING_TO_DIVIDE_ON_ZERO);
+                      return SpuErrors::TRYING_TO_DIVIDE_ON_ZERO;
     }
 
-    StackPush(&spu->stack, POISON);
-
-    SPU_ERRORS_LOG_ERROR(SpuErrors::TRYING_TO_DIVIDE_ON_ZERO);
-                  return SpuErrors::TRYING_TO_DIVIDE_ON_ZERO;
+    *outValue = CalculatingPrecision * inFirstValue / inSecondValue;
+    
+    return SpuErrors::NO_ERR;
 }
 
-static SpuErrors CommandMul(SpuType* spu)
+static inline SpuErrors CommandMul(int inFirstValue, int inSecondValue, int* outValue)
 {
-    assert(spu);
+    assert(outValue);
 
-    SPU_CHECK(spu);
+    VALUES_CHECK(inFirstValue, inSecondValue);
 
-    int secondValue = POISON;
-    int firstValue  = POISON;
-
-    SpuErrors errors = GetTwoLastValuesFromStack(&spu->stack, &firstValue, &secondValue);
-
-    IF_ERR_RETURN(errors);
-
-    VALUES_CHECK(firstValue, secondValue);
-
-    STACK_PUSH(spu, firstValue * secondValue / CalculatingPrecision);
+    *outValue = inFirstValue * inSecondValue / CalculatingPrecision;
+    
+    return SpuErrors::NO_ERR;
 }
 
-static SpuErrors CommandSub(SpuType* spu)
+static inline SpuErrors CommandSub(int inFirstValue, int inSecondValue, int* outValue)
 {
-    assert(spu);
+    assert(outValue);
 
-    SPU_CHECK(spu);
+    VALUES_CHECK(inFirstValue, inSecondValue);
 
-    int secondValue = POISON;
-    int firstValue  = POISON;
-
-    SpuErrors errors = GetTwoLastValuesFromStack(&spu->stack, &firstValue, &secondValue);
-
-    IF_ERR_RETURN(errors);
-
-    VALUES_CHECK(firstValue, secondValue);
-
-    STACK_PUSH(spu, firstValue - secondValue);
+    *outValue = inFirstValue - inSecondValue;
+    
+    return SpuErrors::NO_ERR;
 }
 
-static SpuErrors CommandAdd(SpuType* spu)
+static inline SpuErrors CommandAdd(int inFirstValue, int inSecondValue, int* outValue)
 {
-    assert(spu);
+    assert(outValue);
 
-    SPU_CHECK(spu);
+    VALUES_CHECK(inFirstValue, inSecondValue);
 
-    int secondValue = POISON;
-    int firstValue  = POISON;
+    *outValue = inFirstValue + inSecondValue;
+    
+    return SpuErrors::NO_ERR;
+}
 
-    SpuErrors errors = GetTwoLastValuesFromStack(&spu->stack, &firstValue, &secondValue);
+#define VALUE_CHECK(inValue)                                                      \
+do                                                                                \
+{                                                                                 \
+    if (!IsValidValue(&inValue))                                                  \
+    {                                                                             \
+        SPU_ERRORS_LOG_ERROR(SpuErrors::VALUES_COULD_NOT_BE_USED_FOR_ARITHMETIC); \
+                      return SpuErrors::VALUES_COULD_NOT_BE_USED_FOR_ARITHMETIC;  \
+    }                                                                             \
+} while (0)
 
-    IF_ERR_RETURN(errors);
+static inline SpuErrors CommandSin(int inValue, int* outValue)
+{
+    assert(outValue);
 
-    VALUES_CHECK(firstValue, secondValue);
+    VALUE_CHECK(inValue);
 
-    STACK_PUSH(spu, firstValue + secondValue);
+    *outValue = (int)(sin(1.0 * inValue / CalculatingPrecision) * CalculatingPrecision);
+
+    return SpuErrors::NO_ERR;
+}
+
+static inline SpuErrors CommandCos(int inValue, int* outValue)
+{
+    assert(outValue);
+
+    VALUE_CHECK(inValue);
+
+    *outValue = (int)(cos(1.0 * inValue / CalculatingPrecision) * CalculatingPrecision);
+
+    return SpuErrors::NO_ERR;
+}
+
+static inline SpuErrors CommandTan(int inValue, int* outValue)
+{
+    assert(outValue);
+
+    VALUE_CHECK(inValue);
+
+    *outValue = (int)(tan(1.0 * inValue / CalculatingPrecision) * CalculatingPrecision);
+
+    return SpuErrors::NO_ERR;
+}
+
+static inline SpuErrors CommandCot(int inValue, int* outValue)
+{
+    assert(outValue);
+
+    VALUE_CHECK(inValue);
+
+    *outValue = (int)(CalculatingPrecision / tan(1.0 * inValue / CalculatingPrecision));
+
+    return SpuErrors::NO_ERR;
+}
+
+//TODO:
+static inline SpuErrors CommandPow(int inValue, int* outValue)
+{
+    assert(outValue);
+
+    VALUE_CHECK(inValue);
+
+    return SpuErrors::NO_ERR;
+}
+
+static inline SpuErrors CommandSqrt(int inValue, int* outValue)
+{
+    assert(outValue);
+
+    VALUE_CHECK(inValue);
+
+    *outValue = (int)(sqrt(inValue) * sqrt(CalculatingPrecision));
+
+    return SpuErrors::NO_ERR;
+}
+
+static inline SpuErrors CommandMeow()
+{
+    system("say cello Meow meow meow meow");
+
+    return SpuErrors::NO_ERR;
+}
+
+static inline SpuErrors CommandBark()
+{
+    system("say Bad Bark bark bark bark");
+
+    return SpuErrors::NO_ERR;
+}
+
+static inline SpuErrors CommandSleep()
+{
+    system("say Bad It's time to sleep");
+
+    return SpuErrors::NO_ERR;
+}
+
+static inline SpuErrors CommandBotay()
+{
+    system("say время ботать");
+
+    return SpuErrors::NO_ERR;
+}
+
+static inline SpuErrors CommandOut(int inValue, int* outValue)
+{
+    assert(outValue);
+
+    VALUE_CHECK(inValue);
+
+    printf("Equation result: " "%lf" "\n", 1.0 * inValue / CalculatingPrecision);
+
+    return SpuErrors::NO_ERR;
 }
 
 #undef VALUES_CHECK
+#undef VALUE_CHECK
 
-static SpuErrors CommandOut(SpuType* spu)
+static SpuErrors CallUnaryCommand (SpuErrors (*Command)(int, int*), SpuType* spu)
 {
+    assert(Command);
     assert(spu);
 
     SPU_CHECK(spu);
 
-    int equationResult = POISON;
+    int value = POISON;
 
-    StackErrorsType stackError = StackPop(&spu->stack, &equationResult);
+    SpuErrors error = GetStackLastValue(&spu->stack, &value);
 
-    if (stackError)
+    IF_ERR_RETURN(error);
+
+    if (!IsValidValue(&value))
     {
-        printf("Couldn't calculate result. Getting result error occurred.\n");
-        SPU_ERRORS_LOG_ERROR(SpuErrors::STACK_ERR);
-                      return SpuErrors::STACK_ERR;
+        SPU_ERRORS_LOG_ERROR(SpuErrors::VALUES_COULD_NOT_BE_USED_FOR_ARITHMETIC);
+                      return SpuErrors::VALUES_COULD_NOT_BE_USED_FOR_ARITHMETIC;
     }
 
-    printf("Equation result: " "%lf" "\n", 1.0 * equationResult / CalculatingPrecision);
+    int commandResult = POISON;
+    error = Command(value, &commandResult);
 
-    //Pushing back on stack
-    STACK_PUSH(spu, equationResult);
+    STACK_PUSH(spu, commandResult);
+
+    SPU_CHECK(spu);
+
+    return error;
+}
+
+static SpuErrors CallBinaryCommand(SpuErrors (*Command)(int, int, int*), SpuType* spu)
+{
+    assert(Command);
+    assert(spu);
+
+    SPU_CHECK(spu);
+
+    int firstValue  = POISON;
+    int secondValue = POISON;
+
+    SpuErrors error = GetTwoLastValuesFromStack(&spu->stack, &firstValue, &secondValue);
+
+    IF_ERR_RETURN(error);
+
+    if (!IsValidValue(&firstValue) || !IsValidValue(&secondValue))
+    {
+        SPU_ERRORS_LOG_ERROR(SpuErrors::VALUES_COULD_NOT_BE_USED_FOR_ARITHMETIC);
+                      return SpuErrors::VALUES_COULD_NOT_BE_USED_FOR_ARITHMETIC;        
+    }
+
+    int commandResult = POISON;
+    error = Command(firstValue, secondValue, &commandResult);    
+
+    STACK_PUSH(spu, commandResult);
+
+    SPU_CHECK(spu);
+
+    return error;
 }
 
 #undef STACK_PUSH
 #undef IF_ERR_RETURN
+
+static SpuErrors GetStackLastValue(StackType* stack, int* value)
+{
+    assert(stack);
+    assert(value);
+
+    StackErrorsType stackError = StackPop(stack, value);
+
+    if (stackError)
+    {
+        SPU_ERRORS_LOG_ERROR(SpuErrors::STACK_ERR);
+                      return SpuErrors::STACK_ERR;
+    }
+
+    return SpuErrors::NO_ERR;
+}
 
 static SpuErrors GetTwoLastValuesFromStack(StackType* stack, int* firstVal, int* secondVal)
 {
@@ -619,7 +814,6 @@ void SpuErrorsLogError(SpuErrors error, const char* fileName,
             LOG_ERR("Invalid register id.\n");
             break;
         
-        //TODO: add new errors
         default:
             LOG_ERR("Unknown error.\n");
             break;
