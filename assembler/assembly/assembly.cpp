@@ -55,26 +55,26 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
         else if (strcmp(command, ADD) == 0)
             *byteCodePtr++ = (int)Commands::ADD_ID;
     
-        else if (strcmp(command, SIN))
+        else if (strcmp(command, SIN) == 0)
             *byteCodePtr++ = (int)Commands::SIN_ID;
-        else if (strcmp(command, COS))
+        else if (strcmp(command, COS) == 0)
             *byteCodePtr++ = (int)Commands::COS_ID;
-        else if (strcmp(command, TAN))
+        else if (strcmp(command, TAN) == 0)
             *byteCodePtr++ = (int)Commands::TAN_ID;
-        else if (strcmp(command, COT))
+        else if (strcmp(command, COT) == 0)
             *byteCodePtr++ = (int)Commands::COT_ID;
-        else if (strcmp(command, SQRT))
+        else if (strcmp(command, SQRT) == 0)
             *byteCodePtr++ = (int)Commands::SQRT_ID;
-        else if (strcmp(command, POW))
+        else if (strcmp(command, POW) == 0)
             *byteCodePtr++ = (int)Commands::POW_ID;
     
-        else if (strcmp(command, MEOW))
+        else if (strcmp(command, MEOW) == 0)
             *byteCodePtr++ = (int)Commands::MEOW_ID;
-        else if (strcmp(command, BARK))
+        else if (strcmp(command, BARK) == 0)
             *byteCodePtr++ = (int)Commands::BARK_ID;
-        else if (strcmp(command, SLEEP))
+        else if (strcmp(command, SLEEP) == 0)
             *byteCodePtr++ = (int)Commands::SLEEP_ID;
-        else if (strcmp(command, BOTAY))
+        else if (strcmp(command, BOTAY) == 0)
             *byteCodePtr++ = (int)Commands::BOTAY_ID;
 
         else if (strcmp(command, OUT) == 0)
@@ -162,8 +162,11 @@ static inline int* CopyArgument(const char* source, int* target)
     assert(source);
     assert(target);
 
-    int scanfResult = sscanf(source, "%d", target);
-    return target + scanfResult;
+    int scannedChars = 0;
+
+    sscanf(source, "%d%n", target, &scannedChars);
+
+    return target + scannedChars;
 }
 
 static inline void PrintByteCode(int* byteCode, const size_t length, FILE* outStream)
