@@ -86,15 +86,15 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
 #undef DEF_CMD
 
 static inline int* CallFunctionWithArgs(const char* commandName, 
-                                    int* byteCode, LineType* asmCode)
+                                        int* byteCode, LineType* asmCode)
 {
     assert(commandName);
     assert(byteCode);
     assert(asmCode);
 
-    if (strcasecmp(commandName, PUSH))
+    if (strcasecmp(commandName, PUSH) == 0)
         return WritePushCommand(byteCode, asmCode);
-    else if (strcasecmp(commandName, POP))
+    else if (strcasecmp(commandName, POP) == 0)
         return WritePopCommand(byteCode, asmCode);
 
     return nullptr;
