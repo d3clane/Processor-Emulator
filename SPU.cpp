@@ -2,14 +2,10 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "assembler/Commands.h"
+#include "assembler/Common.h"
 #include "SPU.h"
 #include "Stack.h"
 #include "InputOutput.h"
-
-//TODO: пусть на возврате ошибок все принтится в лог файл(такую функцию запилить надо бы и все) 
-//Просто функция принтов ошибок как в ассемблере и дизассемблере сделана 
-//+ доделать, чтобы выводилась именно строчка, откуда call был функции на вывод ошибки(ну макрос лепануть хз)
 
 struct SpuType
 {
@@ -116,6 +112,11 @@ static const VersionType SpuVersion = 1;
 
 //--------functions realization------
 
+#define DEF_CMD(name, num, haveArgs, code, ...)        \
+    case Commands::name ##_ID:                         \
+        code;                                          \
+        break;
+
 SpuErrors Processing(FILE* inStream)
 {
     assert(inStream);
@@ -146,71 +147,12 @@ SpuErrors Processing(FILE* inStream)
         bool quitCycle = false;
         
         command = *spu.byteCodeArrayReadPtr++;
+
         switch((Commands) command)
         {
-        case Commands::PUSH_ID:
-            SpuError = CommandPush(&spu);
-            break;
-        case Commands::PUSH_REGISTER_ID:
-            SpuError = CommandPushRegister(&spu);
-            break;
-        case Commands::POP_ID:
-            SpuError = CommandPop(&spu);
-            break;
-        case Commands::IN_ID:
-            SpuError = CommandIn(&spu);
-            break;
-        case Commands::DIV_ID:
-            SpuError = CallBinaryCommand(CommandDiv, &spu);
-            break;
-        case Commands::ADD_ID:
-            SpuError = CallBinaryCommand(CommandAdd, &spu);
-            break;
-        case Commands::SUB_ID:
-            SpuError = CallBinaryCommand(CommandSub, &spu);
-            break;
-        case Commands::MUL_ID:
-            SpuError = CallBinaryCommand(CommandMul, &spu);
-            break;
 
-        case Commands::SIN_ID:
-            CallUnaryCommand(CommandSin, &spu);
-            break;
-        case Commands::COS_ID:
-            CallUnaryCommand(CommandCos, &spu);
-            break;
-        case Commands::TAN_ID:
-            CallUnaryCommand(CommandTan, &spu);
-            break;
-        case Commands::COT_ID:
-            CallUnaryCommand(CommandCot, &spu);
-            break;  
-        case Commands::POW_ID:
-            CallUnaryCommand(CommandPow, &spu);
-            break;
-        case Commands::SQRT_ID:
-            CallUnaryCommand(CommandSqrt, &spu);
-            break;
-        
-        case Commands::MEOW_ID:
-            SpuError = CommandMeow();
-            break;
-        case Commands::BARK_ID:
-            SpuError = CommandBark();
-            break;
-        case Commands::SLEEP_ID:
-            SpuError = CommandSleep();
-            break;
-        case Commands::BOTAY_ID:
-            SpuError = CommandBotay();
-            break;
-        
-        case Commands::OUT_ID:
-            SpuError = CallUnaryCommand(CommandOut, &spu);
-            break;
-        case Commands::HLT_ID:
-            quitCycle = true;
-            break;
+        #include "assembler/Commands.h"
+
         default:
             SpuError = SpuErrors::INVALID_COMMAND;
             SPU_ERRORS_LOG_ERROR(SpuError);
@@ -506,28 +448,28 @@ static inline SpuErrors CommandSqrt(int inValue, int* outValue)
 
 static inline SpuErrors CommandMeow()
 {
-    system("say cello Meow meow meow meow");
+    system("say -v cello \"Meow meow meow meow\"");
 
     return SpuErrors::NO_ERR;
 }
 
 static inline SpuErrors CommandBark()
 {
-    system("say Bad Bark bark bark bark");
+    system("say -v \"Bad Bark bark bark bark\"");
 
     return SpuErrors::NO_ERR;
 }
 
 static inline SpuErrors CommandSleep()
 {
-    system("say Bad It's time to sleep");
+    system("say -v Bad \"It's time to sleep\"");
 
     return SpuErrors::NO_ERR;
 }
 
 static inline SpuErrors CommandBotay()
 {
-    system("say время ботать");
+    system("say \"время ботать\"");
 
     return SpuErrors::NO_ERR;
 }
