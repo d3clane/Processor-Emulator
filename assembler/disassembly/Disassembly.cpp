@@ -5,18 +5,25 @@
 #include "Disassembly.h"
 #include "../../InputOutput.h"
 
+//--------Extra info checking--------
+
 static inline int* SkipAddedInfo(int* byteCode);
 static inline int* MoveToTheByteCodeStart(int* byteCode);
 static inline CommandsErrors FileVerify(int* byteCode);
+
+//--------Copy functions---------
 
 static inline size_t CopyValue(const int* source, char* target, char** targetEndPtr);
 static inline size_t CopyRegister(const int* source, char* target, char** targetEndPtr);
 static inline size_t CopyArguments(Commands command, const int* source, 
                                    char* target, char** targetEndPtr);
-
 static inline char* SprintfRegisterName(char* targPtr, const size_t registerId);
 
+//-----Disassembly version--------------
+
 static const uint32_t DisassemblyVersion = 1;
+
+//------Auto generating define----------
 
 #define DEF_CMD(name, num, haveArgs, ...)                                               \
     case Commands::name ##_ID:                                                          \
