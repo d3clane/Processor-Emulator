@@ -20,7 +20,6 @@ static const uint32_t DisassemblyVersion = 1;
 
 #define DEF_CMD(name, num, haveArgs, ...)                                               \
     case Commands::name ##_ID:                                                          \
-        printf(#name " and command num: %d, haveargs: %d\n", num, haveArgs);            \
         asmCodePtr += sprintf(asmCodePtr, "%s ", #name);                                \
         break;
 
@@ -54,8 +53,6 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
     
         byteCodePtr++; 
 
-        printf("1command id: %d, pointer id: %d\n", command, byteCodePtr - byteCode);
-
         assert(asmCodePtr < asmCode + byteCodeSize * maxCommandLength);
         
         switch((Commands) command)
@@ -77,9 +74,8 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
 
             return CommandsErrors::INVALID_COMMAND_ID;
         }
-        printf("2command id: %d, pointer id: %d\n", command, byteCodePtr - byteCode);
+
         byteCodePtr += CopyArguments((Commands) command, byteCodePtr, asmCodePtr, &asmCodePtr);
-        printf("3command id: %d, pointer id: %d\n", command, byteCodePtr - byteCode);
         *asmCodePtr++ = '\n';
 
         if (command == (int) Commands::HLT_ID)
