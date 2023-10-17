@@ -19,6 +19,7 @@ static inline int* WritePushCommand(int* byteCode, LineType* asmCode);
 static inline int* WritePopCommand (int* byteCode, LineType* asmCode);
 
 //-----------Printing commands---------------
+
 static inline void PrintByteCode(int* byteCode, const size_t length, FILE* outStream);
 
 //------------Consts------------------
@@ -67,8 +68,6 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
                                return CommandsErrors::INVALID_COMMAND_STRING;
         }
 
-        //TODO: перенести короче в копиаргумент перекопирование регистра (или наоборот убрать эту функцию подумать крч)
-        byteCodePtr = CopyArgument(asmCode.lines[line].line + strlen(command), byteCodePtr);
     }
 
     assert(byteCodePtr - byteCode > 0);
@@ -105,17 +104,27 @@ static inline int* WritePushCommand(int* byteCode, LineType* asmCode)
     assert(byteCode);
     assert(asmCode);
 
-    static char registerName[RegisterStringLength + 1] = "";
+    int value = -1;
+    int scanfResult = sscanf(asmCode->line + strlen(PUSH), "%d", &value);
 
-    int scanfResult = sscanf(asmCode->line + strlen(PUSH), "%s", registerName);
-    int registerId  = GetRegisterId(registerName);
-
-    if (scanfResult == 0 || registerId == -1)
+    if (scanfResult == 1)
     {
         *byteCode++ = (int)Commands::PUSH_ID;
+        *byteCode++ = value;
         return byteCode;
     }
     
+    static char registerName[RegisterStringLength + 1] = "";
+
+    scanfResult = sscanf(asmCode->line + strlen(PUSH), "%s", registerName);
+    int registerId = GetRegisterId(registerName);
+
+    if (registerId == -1)
+    {
+        COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_SYNTAX);
+        return nullptr;
+    }
+
     *byteCode++ = (int)Commands::PUSH_REGISTER_ID;
     *byteCode++ = registerId;
 
