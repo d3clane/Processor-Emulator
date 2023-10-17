@@ -9,11 +9,20 @@ static inline int* SkipAddedInfo(int* byteCode);
 static inline int* MoveToTheByteCodeStart(int* byteCode);
 static inline CommandsErrors FileVerify(int* byteCode);
 
-static inline size_t CopyArgument(const int* source, char* target, char** targetEndPtr);
+static inline size_t CopyValue(const int* source, char* target, char** targetEndPtr);
 static inline size_t CopyRegister(const int* source, char* target, char** targetEndPtr);
+static inline size_t CopyArguments(Commands command, const int* source, 
+                                   char* target, char** targetEndPtr);
+
 static inline char* SprintfRegisterName(char* targPtr, const size_t registerId);
 
 static const uint32_t DisassemblyVersion = 1;
+
+#define DEF_CMD(name, num, haveArgs, ...)                                               \
+    case Commands::name ##_ID:                                                          \
+        printf(#name " and command num: %d, haveargs: %d\n", num, haveArgs);            \
+        asmCodePtr += sprintf(asmCodePtr, "%s ", #name);                                \
+        break;
 
 CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
 {
@@ -34,7 +43,7 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
 
     byteCodePtr = SkipAddedInfo(byteCodePtr);
 
-    static const size_t maxCommandLength = 8; //including register length
+    static const size_t maxCommandLength = 15; //including register length
     //TODO: change on reading from the beginning of the file for example (all size of the unassemblered)
     char* asmCode    = (char*) calloc(byteCodeSize * maxCommandLength, sizeof(char));
     char* asmCodePtr = asmCode;
@@ -42,48 +51,17 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
     while (true)
     {
         int command    = *byteCodePtr;
-        byteCodePtr++;
-        bool quitCycle = false;
+    
+        byteCodePtr++; 
+
+        printf("1command id: %d, pointer id: %d\n", command, byteCodePtr - byteCode);
 
         assert(asmCodePtr < asmCode + byteCodeSize * maxCommandLength);
         
         switch((Commands) command)
         {
-        case Commands::PUSH_ID:
-            asmCodePtr  += sprintf(asmCodePtr, "%s ", PUSH);
-            byteCodePtr += CopyArgument(byteCodePtr, asmCodePtr, &asmCodePtr);
-            break;
-        case Commands::PUSH_REGISTER_ID:
-            asmCodePtr  += sprintf(asmCodePtr, "%s ", PUSH);
-            byteCodePtr += CopyRegister(byteCodePtr, asmCodePtr, &asmCodePtr);
-            break;
-        case Commands::POP_ID:
-            asmCodePtr  += sprintf(asmCodePtr, "%s ", POP);
-            byteCodePtr += CopyRegister(byteCodePtr, asmCodePtr, &asmCodePtr);
-            break;
-        
-        case Commands::IN_ID:
-            asmCodePtr += sprintf(asmCodePtr, "%s", IN);
-            break;
-        case Commands::DIV_ID:
-            asmCodePtr += sprintf(asmCodePtr, "%s", DIV);
-            break;
-        case Commands::ADD_ID:
-            asmCodePtr += sprintf(asmCodePtr, "%s", ADD);
-            break;
-        case Commands::SUB_ID:
-            asmCodePtr += sprintf(asmCodePtr, "%s", SUB);
-            break;
-        case Commands::MUL_ID:
-            asmCodePtr += sprintf(asmCodePtr, "%s", MUL);
-            break;
-        case Commands::OUT_ID:
-            asmCodePtr += sprintf(asmCodePtr, "%s", OUT);
-            break;
-        case Commands::HLT_ID:
-            asmCodePtr += sprintf(asmCodePtr, "%s", HLT);
-            quitCycle = true;
-            break;
+
+        #include "../Commands.h"
 
         default:
             COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_ID);
@@ -99,10 +77,12 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
 
             return CommandsErrors::INVALID_COMMAND_ID;
         }
-        
+        printf("2command id: %d, pointer id: %d\n", command, byteCodePtr - byteCode);
+        byteCodePtr += CopyArguments((Commands) command, byteCodePtr, asmCodePtr, &asmCodePtr);
+        printf("3command id: %d, pointer id: %d\n", command, byteCodePtr - byteCode);
         *asmCodePtr++ = '\n';
 
-        if (quitCycle)
+        if (command == (int) Commands::HLT_ID)
             break;
     }
 
@@ -120,7 +100,9 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
     return CommandsErrors::NO_ERR;
 }
 
-static inline size_t CopyArgument(const int* source, char* target, char** targetEndPtr)
+#undef DEF_CMD
+
+static inline size_t CopyValue(const int* source, char* target, char** targetEndPtr)
 {
     assert(source);
     assert(target);
@@ -153,6 +135,27 @@ static inline size_t CopyRegister(const int* source, char* target, char** target
     *targetEndPtr = targPtr;
 
     return 1;
+}
+
+static inline size_t CopyArguments(Commands command, const int* source, 
+                                   char* target, char** targetEndPtr)
+{
+    switch (command)
+    {
+    case Commands::PUSH_ID:
+        return CopyValue(source, target, targetEndPtr);
+        break;
+
+    case Commands::POP_ID:
+    case Commands::PUSH_REGISTER_ID:
+        return CopyRegister(source, target, targetEndPtr);
+        break;
+
+    default:
+        break;
+    }
+
+    return 0;
 }
 
 static inline char* SprintfRegisterName(char* targPtr, const size_t registerId)
