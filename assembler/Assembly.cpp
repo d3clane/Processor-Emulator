@@ -9,7 +9,7 @@ static const VersionType AssemblyVersion = 1;
 
 static inline int GetRegisterId(const char* reg);
 static inline int* CopyArgument(const char* source, int* target);
-static inline int* AddSpecificationInfo(int* byteCode);
+static inline int* AddSpecificationInfo(int* byteCode, const size_t asmFileSize);
 
 //------------Writing to array commands--------------
 static inline int* CallFunctionWithArgs(const char* commandName, 
@@ -44,8 +44,8 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
 
     int* byteCode    = (int*) calloc(asmCode.textSz + AddedInfoSizeByteCode, sizeof(*byteCode));
     int* byteCodePtr = byteCode;
- 
-    byteCodePtr = AddSpecificationInfo(byteCodePtr);
+
+    byteCodePtr = AddSpecificationInfo(byteCodePtr, asmCode.textSz);
 
     static const size_t maxCommandLength  =  5;
     static char command[maxCommandLength] = "";
@@ -176,10 +176,14 @@ static inline void PrintByteCode(int* byteCode, const size_t length, FILE* outSt
     assert(nWrite == length);
 }
 
-static inline int* AddSpecificationInfo(int* byteCode)
+static inline int* AddSpecificationInfo(int* byteCode, const size_t asmFileSize)
 {
     assert(byteCode);
 
+    static const size_t addedInfoSizeByteCode = 4;
+
+    *byteCode++ = addedInfoSizeByteCode;
+    *byteCode++ = asmFileSize;
     *byteCode++ = Signature;
     *byteCode++ = AssemblyVersion;
 

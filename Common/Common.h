@@ -13,6 +13,7 @@ enum class CommandsErrors
 
     INVALID_SIGNATURE,
     INVALID_VERSIONS,
+    INVALID_ADDED_INFO,
 };
 
 typedef int SignatureType;

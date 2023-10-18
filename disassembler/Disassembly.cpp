@@ -5,10 +5,12 @@
 #include "Disassembly.h"
 #include "../InputOutput/InputOutput.h"
 
-//--------Extra info checking--------
+//--------Extra info processing--------
 
-static inline int* SkipAddedInfo(int* byteCode);
-static inline int* MoveToTheByteCodeStart(int* byteCode);
+static inline int* SkipAddedInfo(int* byteCode, const size_t addedInfoSizeByteCode);
+static inline int* MoveToTheByteCodeStart(int* byteCode, const size_t addedInfoSizeByteCode);
+static inline int ReadAddedInfoSize(int* byteCode);
+static inline int ReadDisasmFileSize(int* byteCode);
 static inline CommandsErrors FileVerify(int* byteCode);
 
 //--------Copy functions---------
@@ -47,11 +49,16 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
                            return addedInfoErrors;
     }
 
-    byteCodePtr = SkipAddedInfo(byteCodePtr);
+    const int addedInfoSizeByteCode = ReadAddedInfoSize(byteCodePtr);
+    assert(addedInfoSizeByteCode > 0);
 
-    static const size_t maxCommandLength = 15; //including register length
-    //TODO: change on reading from the beginning of the file for example (all size of the unassemblered)
-    char* asmCode    = (char*) calloc(byteCodeSize * maxCommandLength, sizeof(char));
+    const int disasmFileSize = ReadDisasmFileSize(byteCodePtr);
+    assert(disasmFileSize > 0);
+
+    byteCodePtr = SkipAddedInfo(byteCodePtr, addedInfoSizeByteCode);
+
+    //TODO: магическую двоечку бы пофиксить возникает в двух ассертах снизу
+    char* asmCode    = (char*) calloc(2 * disasmFileSize, sizeof(char));
     char* asmCodePtr = asmCode;
 
     while (true)
@@ -60,7 +67,7 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
     
         byteCodePtr++; 
 
-        assert(asmCodePtr < asmCode + byteCodeSize * maxCommandLength);
+        assert(asmCodePtr - asmCode < 2 * disasmFileSize);
         
         switch((Commands) command)
         {
@@ -89,7 +96,9 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
             break;
     }
 
+    assert(asmCodePtr - asmCode < 2 * disasmFileSize);
     assert(asmCodePtr >= asmCode);
+
     PrintText(asmCode, (size_t)(asmCodePtr - asmCode), outStream);
 
     free(byteCode);
@@ -169,25 +178,63 @@ static inline char* SprintfRegisterName(char* targPtr, const size_t registerId)
     return targPtr + sprintf(targPtr, "r%cx",(char)('a' + registerId));
 }
 
-static inline int* SkipAddedInfo(int* byteCode)
+static inline int* SkipAddedInfo(int* byteCode, const size_t addedInfoSizeByteCode)
 {
     assert(byteCode);
 
-    return byteCode + AddedInfoSizeByteCode;
+    return byteCode + addedInfoSizeByteCode;
 }
 
-static inline int* MoveToTheByteCodeStart(int* byteCode)
+static inline int ReadDisasmFileSize(int* byteCode)
 {
     assert(byteCode);
 
-    return byteCode - AddedInfoSizeByteCode;
+    int disasmFileSize = byteCode[1];
+
+    assert(disasmFileSize > 0);
+
+    return disasmFileSize;
+}
+
+static inline int ReadAddedInfoSize(int* byteCode)
+{
+    assert(byteCode);
+
+    int addedInfoSize = byteCode[0];
+
+    assert(addedInfoSize > 0);
+    
+    return addedInfoSize;
+}
+
+static inline int* MoveToTheByteCodeStart(int* byteCode, const size_t addedInfoSizeByteCode)
+{
+    assert(byteCode);
+
+    return byteCode - addedInfoSizeByteCode;
 }
 
 static inline CommandsErrors FileVerify(int* byteCode)
 {
     assert(byteCode);
 
-    SignatureType fileSignature = byteCode[0];
+    int addedInfoSizeByteCode = byteCode[0];
+
+    if (addedInfoSizeByteCode <= 0)
+    {
+        COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_ADDED_INFO);
+                           return CommandsErrors::INVALID_ADDED_INFO;
+    }
+
+    int disasmFileSize = byteCode[1];
+
+    if (disasmFileSize < 0)
+    {
+        COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_ADDED_INFO);
+                    return CommandsErrors::INVALID_ADDED_INFO;  
+    }
+
+    SignatureType fileSignature = byteCode[2];
     
     if (fileSignature != Signature)
     {
@@ -195,7 +242,7 @@ static inline CommandsErrors FileVerify(int* byteCode)
                            return CommandsErrors::INVALID_SIGNATURE; 
     }
     
-    VersionType fileVersion = byteCode[1];
+    VersionType fileVersion = byteCode[3];
 
     if (fileVersion != DisassemblyVersion)
     {
@@ -204,12 +251,4 @@ static inline CommandsErrors FileVerify(int* byteCode)
     }
 
     return CommandsErrors::NO_ERR;
-}
-
-static inline void FreeByteCode(int* byteCode)
-{
-    assert(byteCode);
-
-    byteCode = MoveToTheByteCodeStart(byteCode);
-    free(byteCode);
 }
