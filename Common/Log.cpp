@@ -99,7 +99,6 @@ ssize_t Log(const char* format, ...)
 
     numberOfChars = Min(numberOfChars, BufSize);
     
-    //TODO: abi::__cxa_demangle()
     return write(LOG_FILE, buf, numberOfChars * sizeof(char));
 }
 
