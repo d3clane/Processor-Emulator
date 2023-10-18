@@ -30,9 +30,15 @@ static const SignatureType Signature = 'COCK';
 
 #undef DEF_CMD
 
-static const size_t DisasmFileSizeInfoPosition = 1;
-static const size_t SignatureInfoPosition      = 2;
-static const size_t VersionInfoPosition        = 3;
+static const size_t AddedInfoSizeByteCode = 3;
+
+enum AddedInfoPositions
+{
+    DisasmFileSizeInfoPosition = 0,
+    SignatureInfoPosition      = 1,
+    VersionInfoPosition        = 2,
+
+};
 
 static const size_t NumberOfRegisters    = 4;      
 static const size_t RegisterStringLength = 3;

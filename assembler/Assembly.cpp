@@ -43,12 +43,10 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
     TextType asmCode = {};
     TextTypeCtor(&asmCode, inStream);
 
-    static const size_t addedInfoSizeByteCode = 4;
-
-    int* byteCode    = (int*) calloc(asmCode.textSz + addedInfoSizeByteCode, sizeof(*byteCode));
+    int* byteCode    = (int*) calloc(asmCode.textSz + AddedInfoSizeByteCode, sizeof(*byteCode));
     int* byteCodePtr = byteCode;
 
-    byteCodePtr = AddSpecificationInfo(byteCodePtr, asmCode.textSz, addedInfoSizeByteCode);
+    byteCodePtr = AddSpecificationInfo(byteCodePtr, asmCode.textSz, AddedInfoSizeByteCode);
 
     static const size_t maxCommandLength  =  5;
     static char command[maxCommandLength] = "";
@@ -184,8 +182,6 @@ static inline int* AddSpecificationInfo(int* byteCode, const size_t asmFileSize,
 {
     assert(byteCode);
 
-   
-    byteCode[0] = addedInfoSizeByteCode;
     byteCode[DisasmFileSizeInfoPosition] = asmFileSize;
     byteCode[SignatureInfoPosition]      = Signature;
     byteCode[VersionInfoPosition]        = AssemblyVersion;

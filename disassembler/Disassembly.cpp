@@ -9,7 +9,6 @@
 
 static inline int* SkipAddedInfo(int* byteCode, const size_t addedInfoSizeByteCode);
 static inline int* MoveToTheByteCodeStart(int* byteCode, const size_t addedInfoSizeByteCode);
-static inline int ReadAddedInfoSize(int* byteCode);
 static inline int ReadDisasmFileSize(int* byteCode);
 static inline CommandsErrors FileVerify(int* byteCode);
 
@@ -49,16 +48,15 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
                            return addedInfoErrors;
     }
 
-    const int addedInfoSizeByteCode = ReadAddedInfoSize(byteCodePtr);
-    assert(addedInfoSizeByteCode > 0);
-
-    const int disasmFileSize = ReadDisasmFileSize(byteCodePtr);
+    static const size_t asmCodeSizeMultiplier = 2;
+    const int disasmFileSize = ReadDisasmFileSize(byteCodePtr) * asmCodeSizeMultiplier;
+    //TODO: наверное чет сделать с этим, возникает из-за того что дизассемблер PUSH-> PUSH_REGISTER
     assert(disasmFileSize > 0);
 
-    byteCodePtr = SkipAddedInfo(byteCodePtr, addedInfoSizeByteCode);
+    byteCodePtr = SkipAddedInfo(byteCodePtr, AddedInfoSizeByteCode);
 
     //TODO: магическую двоечку бы пофиксить возникает в двух ассертах снизу
-    char* asmCode    = (char*) calloc(2 * disasmFileSize, sizeof(char));
+    char* asmCode    = (char*) calloc(asmCodeSizeMultiplier * disasmFileSize, sizeof(char));
     char* asmCodePtr = asmCode;
 
     while (true)
@@ -67,7 +65,7 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
     
         byteCodePtr++; 
 
-        assert(asmCodePtr - asmCode < 2 * disasmFileSize);
+        assert(asmCodePtr - asmCode < disasmFileSize);
         
         switch((Commands) command)
         {
@@ -96,7 +94,7 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
             break;
     }
 
-    assert(asmCodePtr - asmCode < 2 * disasmFileSize);
+    assert(asmCodePtr - asmCode < disasmFileSize);
     assert(asmCodePtr >= asmCode);
 
     PrintText(asmCode, (size_t)(asmCodePtr - asmCode), outStream);
@@ -196,17 +194,6 @@ static inline int ReadDisasmFileSize(int* byteCode)
     return disasmFileSize;
 }
 
-static inline int ReadAddedInfoSize(int* byteCode)
-{
-    assert(byteCode);
-
-    int addedInfoSize = byteCode[0];
-
-    assert(addedInfoSize > 0);
-    
-    return addedInfoSize;
-}
-
 static inline int* MoveToTheByteCodeStart(int* byteCode, const size_t addedInfoSizeByteCode)
 {
     assert(byteCode);
@@ -217,14 +204,6 @@ static inline int* MoveToTheByteCodeStart(int* byteCode, const size_t addedInfoS
 static inline CommandsErrors FileVerify(int* byteCode)
 {
     assert(byteCode);
-
-    int addedInfoSizeByteCode = byteCode[0];
-
-    if (addedInfoSizeByteCode <= 0)
-    {
-        COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_ADDED_INFO);
-                           return CommandsErrors::INVALID_ADDED_INFO;
-    }
 
     int disasmFileSize = byteCode[DisasmFileSizeInfoPosition];
 
