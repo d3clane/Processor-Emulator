@@ -30,30 +30,11 @@ static const SignatureType Signature = 'COCK';
 static const size_t AddedInfoSizeByteCode         = 2;
             
 //TODO подумать че сделать с этими константами
-static const char* const PUSH   = "push";
-static const char* const IN     =   "in";
+#define DEF_CMD(name, ...) static const char* const name = #name;
 
-static const char* const POP    =  "pop";
+#include "Commands.h"
 
-static const char* const DIV    =  "div";
-static const char* const MUL    =  "mul";
-static const char* const SUB    =  "sub";
-static const char* const ADD    =  "add";
-
-static const char* const SIN    =  "sin";
-static const char* const COS    =  "cos";
-static const char* const TAN    =  "tan";
-static const char* const COT    =  "cot";
-static const char* const SQRT   = "sqrt";
-static const char* const POW    =  "pow";
-
-static const char* const MEOW   = "meow";
-static const char* const BARK   = "bark";
-static const char* const SLEEP  = "sleep";
-static const char* const BOTAY  = "botay";
-
-static const char* const OUT    =  "out";
-static const char* const HLT    =  "hlt";
+#undef DEF_CMD
 
 static const size_t NumberOfRegisters    = 4;      
 static const size_t RegisterStringLength = 3;
