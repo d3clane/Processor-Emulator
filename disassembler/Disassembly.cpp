@@ -38,8 +38,8 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
     assert(outStream);
 
     size_t byteCodeSize = 0;
-    int* byteCode    = ReadByteCode(inStream, &byteCodeSize);
-    int* byteCodePtr = byteCode;
+    int* byteCode       = ReadByteCode(inStream, &byteCodeSize);
+    int* byteCodePtr    = byteCode;
 
     CommandsErrors addedInfoErrors = FileVerify(byteCode);
 
@@ -189,7 +189,7 @@ static inline int ReadDisasmFileSize(int* byteCode)
 {
     assert(byteCode);
 
-    int disasmFileSize = byteCode[1];
+    int disasmFileSize = byteCode[DisasmFileSizeInfoPosition];
 
     assert(disasmFileSize > 0);
 
@@ -226,7 +226,7 @@ static inline CommandsErrors FileVerify(int* byteCode)
                            return CommandsErrors::INVALID_ADDED_INFO;
     }
 
-    int disasmFileSize = byteCode[1];
+    int disasmFileSize = byteCode[DisasmFileSizeInfoPosition];
 
     if (disasmFileSize < 0)
     {
@@ -234,7 +234,7 @@ static inline CommandsErrors FileVerify(int* byteCode)
                     return CommandsErrors::INVALID_ADDED_INFO;  
     }
 
-    SignatureType fileSignature = byteCode[2];
+    SignatureType fileSignature = byteCode[SignatureInfoPosition];
     
     if (fileSignature != Signature)
     {
@@ -242,7 +242,7 @@ static inline CommandsErrors FileVerify(int* byteCode)
                            return CommandsErrors::INVALID_SIGNATURE; 
     }
     
-    VersionType fileVersion = byteCode[3];
+    VersionType fileVersion = byteCode[VersionInfoPosition];
 
     if (fileVersion != DisassemblyVersion)
     {

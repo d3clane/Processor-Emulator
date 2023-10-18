@@ -12,7 +12,6 @@ struct SpuType
 {
     StackType stack;
 
-    FILE* byteCodeFile;
     int* byteCodeArray;
     int* byteCodeArrayReadPtr;
     size_t byteCodeArraySize;
@@ -287,7 +286,6 @@ static SpuErrors CommandPop(SpuType* spu)
 static SpuErrors CommandIn(SpuType* spu)
 {
     assert(spu);
-    assert(spu->byteCodeFile);
 
     SPU_CHECK(spu);
 
@@ -598,9 +596,8 @@ static SpuErrors SpuCtor(SpuType* spu, FILE* inStream)
     assert(spu);
     assert(inStream);
 
-    spu->byteCodeFile         =              inStream;
-    spu->byteCodeArray        = ReadByteCode(inStream, &spu->byteCodeArraySize);
 
+    spu->byteCodeArray        = ReadByteCode(inStream, &spu->byteCodeArraySize);
     spu->byteCodeArrayReadPtr = spu->byteCodeArray;
 
     StackErrorsType stackError = StackCtor(&spu->stack);
@@ -619,9 +616,6 @@ static SpuErrors SpuCtor(SpuType* spu, FILE* inStream)
 static SpuErrors SpuDtor(SpuType* spu)
 {
     assert(spu);
-
-    fclose(spu->byteCodeFile);
-    spu->byteCodeFile = nullptr;
 
     free(spu->byteCodeArray);
     spu->byteCodeArray = spu->byteCodeArrayReadPtr = nullptr;
@@ -647,7 +641,6 @@ static SpuErrors SpuDump(SpuType* spu, const char* fileName,
 
     Log("Spu dump called from file %s, function %s, line %d\n", fileName, funcName, line);
 
-    Log("Bytecode file adress                 : %p\n", spu->byteCodeFile);
     Log("Bytecode array beginning adress      : %p\n", spu->byteCodeArray);
     Log("Bytecode array adress pointer to read: %p\n", spu->byteCodeArrayReadPtr);
     
@@ -668,12 +661,6 @@ static SpuErrors SpuVerify(SpuType* spu)
 {
     assert(spu);
 
-    if (!spu->byteCodeFile)
-    {
-        SPU_ERRORS_LOG_ERROR(SpuErrors::BYTE_CODE_FILE_IS_NULLPTR);
-                      return SpuErrors::BYTE_CODE_FILE_IS_NULLPTR;
-    }
-
     if (!spu->byteCodeArray)
     {
         SPU_ERRORS_LOG_ERROR(SpuErrors::BYTE_CODE_ARR_IS_NULLPTR);
@@ -681,13 +668,6 @@ static SpuErrors SpuVerify(SpuType* spu)
     }
 
     if (!spu->byteCodeArrayReadPtr)
-    {
-        SPU_ERRORS_LOG_ERROR(SpuErrors::BYTE_CODE_ARR_PTR_OUT_OF_RANGE);
-                      return SpuErrors::BYTE_CODE_ARR_PTR_OUT_OF_RANGE;           
-    }
-
-    if (spu->byteCodeArrayReadPtr > 
-        spu->byteCodeArray + GetFileSize(spu->byteCodeFile))
     {
         SPU_ERRORS_LOG_ERROR(SpuErrors::BYTE_CODE_ARR_PTR_OUT_OF_RANGE);
                       return SpuErrors::BYTE_CODE_ARR_PTR_OUT_OF_RANGE;           
@@ -772,7 +752,9 @@ static inline SpuErrors SkipAddedInfo(SpuType* spu)
 
     SPU_CHECK(spu);
 
-    spu->byteCodeArrayReadPtr += AddedInfoSizeByteCode;
+    assert(spu->byteCodeArray[0] > 0);
+
+    spu->byteCodeArrayReadPtr += spu->byteCodeArray[0];
 
     SPU_CHECK(spu);
 
@@ -788,7 +770,7 @@ static inline SpuErrors FileVerify(SpuType* spu)
     int* byteCodeArrayReadPtr = spu->byteCodeArrayReadPtr;
 
 
-    SignatureType fileSignature = (SignatureType) *byteCodeArrayReadPtr++;
+    SignatureType fileSignature = (SignatureType) byteCodeArrayReadPtr[SignatureInfoPosition];
 
     if (fileSignature != Signature)
     {
@@ -796,7 +778,7 @@ static inline SpuErrors FileVerify(SpuType* spu)
                       return SpuErrors::INVALID_SIGNATURE;
     }
 
-    VersionType fileVersion = (VersionType) *byteCodeArrayReadPtr++;
+    VersionType fileVersion = (VersionType) byteCodeArrayReadPtr[VersionInfoPosition];
     
     if (fileVersion != SpuVersion)
     {

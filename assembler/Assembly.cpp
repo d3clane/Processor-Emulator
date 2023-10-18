@@ -9,7 +9,8 @@ static const VersionType AssemblyVersion = 1;
 
 static inline int GetRegisterId(const char* reg);
 static inline int* CopyArgument(const char* source, int* target);
-static inline int* AddSpecificationInfo(int* byteCode, const size_t asmFileSize);
+static inline int* AddSpecificationInfo(int* byteCode, const size_t asmFileSize, 
+                                                       const size_t addedInfoSizeByteCode);
 
 //------------Writing to array commands--------------
 static inline int* CallFunctionWithArgs(const char* commandName, 
@@ -42,10 +43,12 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
     TextType asmCode = {};
     TextTypeCtor(&asmCode, inStream);
 
-    int* byteCode    = (int*) calloc(asmCode.textSz + AddedInfoSizeByteCode, sizeof(*byteCode));
+    static const size_t addedInfoSizeByteCode = 4;
+
+    int* byteCode    = (int*) calloc(asmCode.textSz + addedInfoSizeByteCode, sizeof(*byteCode));
     int* byteCodePtr = byteCode;
 
-    byteCodePtr = AddSpecificationInfo(byteCodePtr, asmCode.textSz);
+    byteCodePtr = AddSpecificationInfo(byteCodePtr, asmCode.textSz, addedInfoSizeByteCode);
 
     static const size_t maxCommandLength  =  5;
     static char command[maxCommandLength] = "";
@@ -176,16 +179,16 @@ static inline void PrintByteCode(int* byteCode, const size_t length, FILE* outSt
     assert(nWrite == length);
 }
 
-static inline int* AddSpecificationInfo(int* byteCode, const size_t asmFileSize)
+static inline int* AddSpecificationInfo(int* byteCode, const size_t asmFileSize, 
+                                                       const size_t addedInfoSizeByteCode)
 {
     assert(byteCode);
 
-    static const size_t addedInfoSizeByteCode = 4;
-
-    *byteCode++ = addedInfoSizeByteCode;
-    *byteCode++ = asmFileSize;
-    *byteCode++ = Signature;
-    *byteCode++ = AssemblyVersion;
+   
+    byteCode[0] = addedInfoSizeByteCode;
+    byteCode[DisasmFileSizeInfoPosition] = asmFileSize;
+    byteCode[SignatureInfoPosition]      = Signature;
+    byteCode[VersionInfoPosition]        = AssemblyVersion;
 
     return byteCode;
 }

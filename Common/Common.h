@@ -23,16 +23,16 @@ typedef int VersionType;
 static const SignatureType Signature = 'COCK';
 #pragma GCC diagnostic warning "-Wmultichar"
 
-// two ints (Signature + Version)
-//TODO: запихнуть в бинарный файл
-static const size_t AddedInfoSizeByteCode         = 2;
-            
 #define DEF_CMD(name, ...) static const char* const name = #name;
 
 //Creating constants PUSH = "push", POP = "pop", ...
 #include "Commands.h"
 
 #undef DEF_CMD
+
+static const size_t DisasmFileSizeInfoPosition = 1;
+static const size_t SignatureInfoPosition      = 2;
+static const size_t VersionInfoPosition        = 3;
 
 static const size_t NumberOfRegisters    = 4;      
 static const size_t RegisterStringLength = 3;
