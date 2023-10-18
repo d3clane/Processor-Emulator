@@ -50,7 +50,7 @@ static inline SpuErrors CommandSin (int inValue, int* outValue);
 static inline SpuErrors CommandCos (int inValue, int* outValue);
 static inline SpuErrors CommandTan (int inValue, int* outValue);
 static inline SpuErrors CommandCot (int inValue, int* outValue);
-static inline SpuErrors CommandPow (int inValue, int* outValue);
+static inline SpuErrors CommandPow2 (int inValue, int* outValue);
 static inline SpuErrors CommandSqrt(int inValue, int* outValue);
 
 static SpuErrors CommandMeow ();
@@ -425,12 +425,13 @@ static inline SpuErrors CommandCot(int inValue, int* outValue)
     return SpuErrors::NO_ERR;
 }
 
-//TODO:
-static inline SpuErrors CommandPow(int inValue, int* outValue)
+static inline SpuErrors CommandPow2(int inValue, int* outValue)
 {
     assert(outValue);
 
     VALUE_CHECK(inValue);
+
+    *outValue = inValue * inValue / CalculatingPrecision;
 
     return SpuErrors::NO_ERR;
 }

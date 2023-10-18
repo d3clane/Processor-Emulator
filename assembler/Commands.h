@@ -63,7 +63,7 @@ DEF_CMD(SQRT, 12, 0,
 
 DEF_CMD(POW , 13, 0,
 {
-    SpuError = CallUnaryCommand(CommandPow, &spu);
+    SpuError = CallUnaryCommand(CommandPow2, &spu);
 })
 
 DEF_CMD(MEOW , 14, 0,
