@@ -15,14 +15,20 @@ CXXFLAGS = -D _DEBUG -ggdb3 -std=c++17 -O0 -Wall -Wextra -Weffc++ -Waggressive-l
 
 PROGRAMDIR = build/bin
 TARGET = $(PROGRAMDIR)/assembly
-OBJECTDIR = build
 DOXYFILE = Others/Doxyfile
 
-HEADERS  = Assembly.h ../../Log.h ../Commands.h ../../Colors.h ../../InputOutput.h ../../StringFuncs.h ../../Errors.h
+HEADERS  = Assembly.h ../../Common/Log.h ../../Common/Common.h ../../Common/Colors.h  \
+					  ../../InputOutput/InputOutput.h \
+					  ../../InputOutput/StringFuncs.h \
+					  ../../Common/Errors.h 		  
 
-FILESCPP = Assembly.cpp main.cpp ../../Log.cpp ../../InputOutput.cpp ../../StringFuncs.cpp ../../Errors.cpp
+FILESCPP = Assembly.cpp ../../Common/Log.cpp ../../Common/Common.cpp \
+					  ../../InputOutput/InputOutput.cpp \
+					  ../../InputOutput/StringFuncs.cpp \
+					  ../../Common/Errors.cpp 		\
+					  main.cpp
 
-objects = $(FILESCPP:%.cpp=$(OBJECTDIR)/%.o)
+objects = $(FILESCPP:%.cpp=%.o)                 
 
 .PHONY: all docs clean buildDirs
 
@@ -31,15 +37,16 @@ all: $(TARGET)
 $(TARGET): $(objects) 
 	$(CXX) $^ -o $(TARGET) $(CXXFLAGS)
 
-$(OBJECTDIR)/%.o : %.cpp $(HEADERS)
+%.o : %.cpp $(HEADERS)
 	$(CXX) -c $< -o $@ $(CXXFLAGS) 
 
 docs: 
 	doxygen $(DOXYFILE)
 
 clean:
-	rm -rf $(OBJECTDIR)/*.o
 	rm -rf *.o
+	rm -rf ../*.o
+	rm -rf ../../*.o
 
 buildDirs:
 	mkdir $(OBJECTDIR)

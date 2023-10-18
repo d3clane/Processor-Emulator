@@ -15,12 +15,16 @@ CXXFLAGS = -D _DEBUG -ggdb3 -std=c++17 -O0 -Wall -Wextra -Weffc++ -Waggressive-l
 
 PROGRAMDIR = build/bin
 TARGET = $(PROGRAMDIR)/disassembly
-OBJECTDIR = build
+OBJECTDIR = .
 DOXYFILE = Others/Doxyfile
 
-HEADERS  = Disassembly.h ../../Log.h ../Commands.h ../../Colors.h ../../InputOutput.h ../../StringFuncs.h ../../Errors.h
+HEADERS  = Disassembly.h ../../Common/Log.h ../../Common/Common.h ../../Common/Colors.h \
+						 ../../Common/Errors.h 											\
+						 ../../InputOutput/InputOutput.h ../../InputOutput/StringFuncs.h
 
-FILESCPP = Disassembly.cpp main.cpp ../../Log.cpp ../../InputOutput.cpp ../../StringFuncs.cpp ../../Errors.cpp
+FILESCPP = Disassembly.cpp ../../Common/Log.cpp ../../Common/Common.cpp						    \
+						   ../../Common/Errors.cpp main.cpp								     	\
+						   ../../InputOutput/InputOutput.cpp ../../InputOutput/StringFuncs.cpp
 
 objects = $(FILESCPP:%.cpp=$(OBJECTDIR)/%.o)
 

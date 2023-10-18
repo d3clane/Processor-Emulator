@@ -2,7 +2,8 @@
 #define ASSEMBLER_H
 
 #include <stdio.h>
-#include "../Common.h"
+
+#include "../../Common/Common.h"
 
 CommandsErrors Disassembly(FILE* inStream, FILE* outStream);
 

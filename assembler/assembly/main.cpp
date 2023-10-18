@@ -1,5 +1,7 @@
 #include <stdio.h>
 
+#include "../../Common/Log.h"
+
 #include "assembly.h"
 
 //docs - first command arg - in, second - out

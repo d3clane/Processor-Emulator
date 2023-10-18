@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "Errors.h"
+#include "../Common/Errors.h"
 #include "StringFuncs.h"
 
 //------------------------------------------------------------------------------------------------

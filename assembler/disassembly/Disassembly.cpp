@@ -3,7 +3,7 @@
 #include <ctype.h>
 
 #include "Disassembly.h"
-#include "../../InputOutput.h"
+#include "../../InputOutput/InputOutput.h"
 
 //--------Extra info checking--------
 
@@ -65,7 +65,7 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
         switch((Commands) command)
         {
 
-        #include "../Commands.h"
+        #include "../../Common/Commands.h"
 
         default:
             COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_ID);

@@ -2,10 +2,11 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "assembler/Common.h"
+#include "../Common/Common.h"
 #include "SPU.h"
-#include "Stack.h"
-#include "InputOutput.h"
+#include "../Stack/Stack.h"
+#include "../InputOutput/InputOutput.h"
+#include "../Common/Log.h"
 
 struct SpuType
 {
@@ -151,7 +152,7 @@ SpuErrors Processing(FILE* inStream)
         switch((Commands) command)
         {
 
-        #include "assembler/Commands.h"
+        #include "../Common/Commands.h"
 
         default:
             SpuError = SpuErrors::INVALID_COMMAND;
