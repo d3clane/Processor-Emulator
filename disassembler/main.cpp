@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #include "Disassembly.h"
-#include "../../Common/Log.h"
+#include "../Common/Log.h"
 
 //argv[1] - in, argv[2] - out
 int main(const int argc, const char* argv[])

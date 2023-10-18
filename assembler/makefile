@@ -17,16 +17,16 @@ PROGRAMDIR = build/bin
 TARGET = $(PROGRAMDIR)/assembly
 DOXYFILE = Others/Doxyfile
 
-HEADERS  = Assembly.h ../../Common/Log.h ../../Common/Common.h ../../Common/Colors.h  \
-					  ../../InputOutput/InputOutput.h \
-					  ../../InputOutput/StringFuncs.h \
-					  ../../Common/Errors.h 		  
+HEADERS  = Assembly.h ../Common/Log.h ../Common/Common.h ../Common/Colors.h  \
+					  ../InputOutput/InputOutput.h \
+					  ../InputOutput/StringFuncs.h \
+					  ../Common/Errors.h 		  
 
-FILESCPP = Assembly.cpp ../../Common/Log.cpp ../../Common/Common.cpp \
-					  ../../InputOutput/InputOutput.cpp \
-					  ../../InputOutput/StringFuncs.cpp \
-					  ../../Common/Errors.cpp 		\
-					  main.cpp
+FILESCPP = Assembly.cpp ../Common/Log.cpp ../Common/Common.cpp \
+					    ../InputOutput/InputOutput.cpp \
+					    ../InputOutput/StringFuncs.cpp \
+					    ../Common/Errors.cpp 		\
+					    main.cpp
 
 objects = $(FILESCPP:%.cpp=%.o)                 
 

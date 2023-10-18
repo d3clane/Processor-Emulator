@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "../../Common/Log.h"
+#include "../Common/Log.h"
 
 #include "assembly.h"
 

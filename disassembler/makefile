@@ -18,13 +18,13 @@ TARGET = $(PROGRAMDIR)/disassembly
 OBJECTDIR = .
 DOXYFILE = Others/Doxyfile
 
-HEADERS  = Disassembly.h ../../Common/Log.h ../../Common/Common.h ../../Common/Colors.h \
-						 ../../Common/Errors.h 											\
-						 ../../InputOutput/InputOutput.h ../../InputOutput/StringFuncs.h
+HEADERS  = Disassembly.h ../Common/Log.h ../Common/Common.h ../Common/Colors.h \
+						 ../Common/Errors.h 											\
+						 ../InputOutput/InputOutput.h ../InputOutput/StringFuncs.h
 
-FILESCPP = Disassembly.cpp ../../Common/Log.cpp ../../Common/Common.cpp						    \
-						   ../../Common/Errors.cpp main.cpp								     	\
-						   ../../InputOutput/InputOutput.cpp ../../InputOutput/StringFuncs.cpp
+FILESCPP = Disassembly.cpp ../Common/Log.cpp ../Common/Common.cpp						    \
+						   ../Common/Errors.cpp main.cpp								     	\
+						   ../InputOutput/InputOutput.cpp ../InputOutput/StringFuncs.cpp
 
 objects = $(FILESCPP:%.cpp=$(OBJECTDIR)/%.o)
 

@@ -3,7 +3,7 @@
 #include <ctype.h>
 
 #include "Assembly.h"
-#include "../../InputOutput/InputOutput.h"
+#include "../InputOutput/InputOutput.h"
 
 static const VersionType AssemblyVersion = 1;
 
@@ -54,7 +54,7 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
     {
         sscanf(asmCode.lines[line].line, "%s", command);
 
-        #include "../../Common/Commands.h"
+        #include "../Common/Commands.h"
 
         /* else */
         {
