@@ -1,5 +1,5 @@
-#ifndef COMMANDS_H
-#define COMMANDS_H
+#ifndef COMMON_H
+#define COMMON_H
 
 #include <stdio.h>
 
@@ -55,4 +55,4 @@ void CommandsErrorsLogError(CommandsErrors error, const char* fileName,
 
 int* ReadByteCode(FILE* inStream, size_t* byteCodeArrSize);
 
-#endif
+#endif // COMMON_H
