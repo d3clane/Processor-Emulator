@@ -12,27 +12,16 @@ static inline int* CopyArgument(const char* source, int* target);
 static inline int* AddSpecificationInfo(int* byteCode, const size_t asmFileSize, 
                                                        const size_t addedInfoSizeByteCode);
 
-//------------Writing to array commands--------------
-
-static inline int* CallFunctionWithArgs(const char* commandName, 
-                                        int* byteCode, LineType* asmCode);
-
-static inline int* WritePushCommand(int* byteCode, LineType* asmCode);
-static inline int* WritePopCommand (int* byteCode, LineType* asmCode);
-
 //-----------Printing commands---------------
 
 static inline void PrintByteCode(int* byteCode, const size_t length, FILE* outStream);
 
 //------------Consts------------------
 
-#define DEF_CMD(name, num, have_args, ...)                                                  \
+#define DEF_CMD(name, num, instructionPrintingCode, ...)                                    \
     if (strcasecmp(command, #name) == 0)                                                    \
     {                                                                                       \
-        if (have_args)                                                                      \
-            byteCodePtr = CallFunctionWithArgs(command, byteCodePtr, &asmCode.lines[line]); \
-        else                                                                                \
-            *byteCodePtr++ = num;                                                           \
+        instructionPrintingCode;                                                            \
     }                                                                                       \
     else 
 
@@ -49,7 +38,7 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
 
     byteCodePtr = AddSpecificationInfo(byteCodePtr, asmCode.textSz, AddedInfoSizeByteCode);
 
-    static const size_t maxCommandLength  =  5;
+    static const size_t maxCommandLength  =  8;
     static char command[maxCommandLength] = "";
 
     for (size_t line = 0; line < asmCode.linesCnt; ++line)
@@ -86,76 +75,6 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
 
 #undef DEF_CMD
 
-static inline int* CallFunctionWithArgs(const char* commandName, 
-                                        int* byteCode, LineType* asmCode)
-{
-    assert(commandName);
-    assert(byteCode);
-    assert(asmCode);
-
-    if (strcasecmp(commandName, PUSH) == 0)
-        return WritePushCommand(byteCode, asmCode);
-    else if (strcasecmp(commandName, POP) == 0)
-        return WritePopCommand(byteCode, asmCode);
-
-    return nullptr;
-}
-
-static inline int* WritePushCommand(int* byteCode, LineType* asmCode)
-{
-    assert(byteCode);
-    assert(asmCode);
-
-    int value = -1;
-    int scanfResult = sscanf(asmCode->line + strlen(PUSH), "%d", &value);
-
-    if (scanfResult == 1)
-    {
-        *byteCode++ = (int)Commands::PUSH_ID;
-        *byteCode++ = value;
-        return byteCode;
-    }
-    
-    static char registerName[RegisterStringLength + 1] = "";
-
-    scanfResult = sscanf(asmCode->line + strlen(PUSH), "%s", registerName);
-    int registerId = GetRegisterId(registerName);
-
-    if (registerId == -1)
-    {
-        COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_SYNTAX);
-        return nullptr;
-    }
-
-    *byteCode++ = (int)Commands::PUSH_REGISTER_ID;
-    *byteCode++ = registerId;
-
-    return byteCode;
-}
-
-static inline int* WritePopCommand (int* byteCode, LineType* asmCode)
-{
-    assert(byteCode);
-    assert(asmCode);
-
-    static char registerName[RegisterStringLength + 1] = "";
-
-    int scanfResult = sscanf(asmCode->line + strlen(POP), "%s", registerName);
-    int registerId  = GetRegisterId(registerName);
-
-    *byteCode++ = (int)Commands::POP_ID;
-
-    if (scanfResult == 0 || registerId == -1)
-    {
-        COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_SYNTAX);
-        return byteCode;
-    }
-
-    *byteCode++ = registerId;
-
-    return byteCode;
-}
-
 static inline int* CopyArgument(const char* source, int* target)
 {
     assert(source);
@@ -187,7 +106,7 @@ static inline int* AddSpecificationInfo(int* byteCode, const size_t asmFileSize,
     byteCode[SignatureInfoPosition]      = Signature;
     byteCode[VersionInfoPosition]        = AssemblyVersion;
 
-    return byteCode + AddedInfoSizeByteCode;
+    return byteCode + addedInfoSizeByteCode;
 }
 
 static inline int GetRegisterId(const char* reg)

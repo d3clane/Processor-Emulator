@@ -1,4 +1,36 @@
-DEF_CMD(PUSH_REGISTER, 0, 1,
+#define PUSH_PRINT_ASM  \
+{   \
+    int value = -1;     \
+    int scanfResult = sscanf(asmCode.lines[line].line + strlen(PUSH), "%d", &value); \
+    \
+    if (scanfResult == 1)       \
+    {   \
+        *byteCodePtr++ = (int)Commands::PUSH_ID;   \
+        *byteCodePtr++ = value;    \
+    } \
+    else \
+    {   \
+        char registerName[RegisterStringLength + 1] = ""; \
+                                                                 \
+        scanfResult = sscanf(asmCode.lines[line].line + strlen(PUSH), "%s", registerName); \
+        int registerId = GetRegisterId(registerName); \
+                                        \
+        if (registerId == -1) \
+        { \
+            COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_SYNTAX); \
+        }   \
+        else \
+        {   \
+            *byteCodePtr++ = (int)Commands::PUSH_REGISTER_ID; \
+            *byteCodePtr++ = registerId; \
+        } \
+    }   \
+}
+
+DEF_CMD(PUSH_REGISTER, 0,
+{
+    PUSH_PRINT_ASM;
+},
 {
     SpuError = CommandPushRegister(&spu);
 },
@@ -29,7 +61,10 @@ static SpuErrors CommandPushRegister(SpuType* spu)
 
 //------------------------
 
-DEF_CMD(PUSH, 1, 1,
+DEF_CMD(PUSH, 1, 
+{
+    PUSH_PRINT_ASM
+},
 {
     SpuError = CommandPush(&spu);
 },
@@ -51,9 +86,16 @@ static SpuErrors CommandPush(SpuType* spu)
 }
 )
 
+#undef PUSH_PRINT_ASM
+
 //---------------------
 
-DEF_CMD(IN, 2, 0,
+#define NO_ARGS_INSTRUCTIONS_PRINT_ASM(num) *byteCodePtr++ = num;
+
+DEF_CMD(IN, 2, 
+{
+    NO_ARGS_INSTRUCTIONS_PRINT_ASM(2);
+},
 {
     SpuError = CommandIn(&spu);
 },
@@ -87,7 +129,20 @@ static SpuErrors CommandIn(SpuType* spu)
 
 //-------------------------------
 
-DEF_CMD(POP, 3, 1,
+DEF_CMD(POP, 3, 
+{
+    char registerName[RegisterStringLength + 1] = "";
+
+    int scanfResult = sscanf(asmCode.lines[line].line + strlen(POP), "%s", registerName);
+    int registerId  = GetRegisterId(registerName);
+
+    *byteCodePtr++ = (int)Commands::POP_ID;
+
+    if (scanfResult == 0 || registerId == -1)
+        COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_SYNTAX);
+    else
+        *byteCodePtr++ = registerId;
+},
 {
     SpuError = CommandPop(&spu);
 },
@@ -124,7 +179,10 @@ static SpuErrors CommandPop(SpuType* spu)
 
 //-----------------------
 
-DEF_CMD(MUL, 4, 0,
+DEF_CMD(MUL, 4,  
+{
+    NO_ARGS_INSTRUCTIONS_PRINT_ASM(4);
+},
 {
     SpuError = CallBinaryCommand(CommandMul, &spu);
 },
@@ -144,7 +202,10 @@ static inline SpuErrors CommandMul(int inFirstValue, int inSecondValue, int* out
 //-----------------------
 
 
-DEF_CMD(ADD, 5, 0,
+DEF_CMD(ADD, 5,  
+{
+    NO_ARGS_INSTRUCTIONS_PRINT_ASM(5);
+},
 {
     SpuError = CallBinaryCommand(CommandAdd, &spu);
 },
@@ -163,7 +224,10 @@ static inline SpuErrors CommandAdd(int inFirstValue, int inSecondValue, int* out
 
 //-----------------------
 
-DEF_CMD(DIV, 6, 0,
+DEF_CMD(DIV, 6,  
+{
+    NO_ARGS_INSTRUCTIONS_PRINT_ASM(6);
+},
 {
     SpuError = CallBinaryCommand(CommandDiv, &spu);
 },
@@ -189,7 +253,10 @@ static inline SpuErrors CommandDiv(int inFirstValue, int inSecondValue, int* out
 
 //-----------------------
 
-DEF_CMD(SUB, 7, 0,
+DEF_CMD(SUB, 7,  
+{
+    NO_ARGS_INSTRUCTIONS_PRINT_ASM(7);
+},
 {
     SpuError = CallBinaryCommand(CommandSub, &spu);
 },
@@ -208,7 +275,10 @@ static inline SpuErrors CommandSub(int inFirstValue, int inSecondValue, int* out
 
 //-----------------------
 
-DEF_CMD(SIN, 8, 0,
+DEF_CMD(SIN, 8,  
+{
+    NO_ARGS_INSTRUCTIONS_PRINT_ASM(8);
+},
 {
     SpuError = CallUnaryCommand(CommandSin, &spu);
 },
@@ -227,7 +297,10 @@ static inline SpuErrors CommandSin(int inValue, int* outValue)
 
 //-----------------------
 
-DEF_CMD(COS,  9, 0,
+DEF_CMD(COS,  9,  
+{
+    NO_ARGS_INSTRUCTIONS_PRINT_ASM(9);
+},
 {
     SpuError = CallUnaryCommand(CommandCos, &spu);
 },
@@ -246,7 +319,10 @@ static inline SpuErrors CommandCos(int inValue, int* outValue)
 
 //-----------------------
 
-DEF_CMD(TAN, 10, 0,
+DEF_CMD(TAN, 10,  
+{
+    NO_ARGS_INSTRUCTIONS_PRINT_ASM(10);
+},
 {
     SpuError = CallUnaryCommand(CommandTan, &spu);
 },
@@ -265,7 +341,10 @@ static inline SpuErrors CommandTan(int inValue, int* outValue)
 
 //-----------------------
 
-DEF_CMD(COT, 11, 0,
+DEF_CMD(COT, 11,  
+{
+    NO_ARGS_INSTRUCTIONS_PRINT_ASM(11);
+},
 {
     SpuError = CallUnaryCommand(CommandCot, &spu);
 },
@@ -284,7 +363,10 @@ static inline SpuErrors CommandCot(int inValue, int* outValue)
 
 //-----------------------
 
-DEF_CMD(SQRT, 12, 0,
+DEF_CMD(SQRT, 12,  
+{
+    NO_ARGS_INSTRUCTIONS_PRINT_ASM(12);
+},
 {
     SpuError = CallUnaryCommand(CommandSqrt, &spu);
 },
@@ -303,7 +385,10 @@ static inline SpuErrors CommandSqrt(int inValue, int* outValue)
 
 //-----------------------
 
-DEF_CMD(POW2, 13, 0,
+DEF_CMD(POW2, 13,  
+{
+    NO_ARGS_INSTRUCTIONS_PRINT_ASM(13);
+},
 {
     SpuError = CallUnaryCommand(CommandPow2, &spu);
 },
@@ -322,7 +407,10 @@ static inline SpuErrors CommandPow2(int inValue, int* outValue)
 
 //-----------------------
 
-DEF_CMD(MEOW , 14, 0,
+DEF_CMD(MEOW , 14,  
+{
+    NO_ARGS_INSTRUCTIONS_PRINT_ASM(14);
+},
 {
     SpuError = CommandMeow();
 },
@@ -337,7 +425,10 @@ static inline SpuErrors CommandMeow()
 
 //-----------------------
 
-DEF_CMD(BARK , 15, 0,
+DEF_CMD(BARK , 15,  
+{
+    NO_ARGS_INSTRUCTIONS_PRINT_ASM(15);
+},
 {
     SpuError = CommandBark();
 },
@@ -352,7 +443,10 @@ static inline SpuErrors CommandBark()
 
 //-----------------------
 
-DEF_CMD(SLEEP, 16, 0,
+DEF_CMD(SLEEP, 16,  
+{
+    NO_ARGS_INSTRUCTIONS_PRINT_ASM(16);
+},
 {
     SpuError = CommandSleep();
 },
@@ -367,7 +461,10 @@ static inline SpuErrors CommandSleep()
 
 //-----------------------
 
-DEF_CMD(BOTAY, 17, 0,
+DEF_CMD(BOTAY, 17,  
+{
+    NO_ARGS_INSTRUCTIONS_PRINT_ASM(17);
+},
 {
     SpuError = CommandBotay();
 },
@@ -382,7 +479,10 @@ static inline SpuErrors CommandBotay()
 
 //-----------------------
 
-DEF_CMD(OUT, 18, 0,
+DEF_CMD(OUT, 18,  
+{
+    NO_ARGS_INSTRUCTIONS_PRINT_ASM(18);
+},
 {
     SpuError = CallUnaryCommand(CommandOut, &spu);
 },
@@ -401,7 +501,10 @@ static inline SpuErrors CommandOut(int inValue, int* outValue)
 
 //-----------------------
 
-DEF_CMD(HLT, 19, 0,
+DEF_CMD(HLT, 19,  
+{
+    NO_ARGS_INSTRUCTIONS_PRINT_ASM(19);
+},
 {
     quitCycle = true;
 },
@@ -411,3 +514,5 @@ static inline void CommandHlt()
     return;
 }
 )
+
+//-----------------------
