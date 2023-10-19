@@ -1,5 +1,5 @@
-#ifndef PROCESSOR_H
-#define PORCESSOR_H
+#ifndef SPU_H
+#define SPU_H
 
 #include <stdio.h>
 
@@ -16,7 +16,6 @@ enum class SpuErrors
 
     INVALID_COMMAND,
 
-    BYTE_CODE_FILE_IS_NULLPTR, 
     BYTE_CODE_ARR_IS_NULLPTR,
     BYTE_CODE_ARR_PTR_OUT_OF_RANGE,
 

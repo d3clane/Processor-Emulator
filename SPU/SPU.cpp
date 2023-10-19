@@ -89,8 +89,77 @@ do                                                                              
     }                                                                             \
 } while (0)
 
+//----------constants-------------
+
+static const VersionType SpuVersion = 1; 
+
+//--------functions realization------
+
+/// @brief push and return error
+#define STACK_PUSH(SPU, VALUE_TO_PUSH)                           \
+do                                                                                \
+{                                                                                 \
+    StackErrorsType stackErr = StackPush(&(SPU)->stack, (VALUE_TO_PUSH));     \
+                                                                                  \
+    if (stackErr)                                                                 \
+    {                                                                             \
+        SPU_ERRORS_LOG_ERROR(SpuErrors::STACK_ERR);                               \
+                      return SpuErrors::STACK_ERR;                                \
+    }                                                                             \
+                                                                                  \
+} while (0)
+
+#define VALUES_CHECK(FIRST_VALUE, SECOND_VALUE)                                   \
+do                                                                                \
+{                                                                                 \
+    if (!IsValidValues(&(FIRST_VALUE), &(SECOND_VALUE)))                          \
+    {                                                                             \
+        SPU_ERRORS_LOG_ERROR(SpuErrors::VALUES_COULD_NOT_BE_USED_FOR_ARITHMETIC); \
+                      return SpuErrors::VALUES_COULD_NOT_BE_USED_FOR_ARITHMETIC;  \
+    }                                                                             \
+} while (0)
+
+#define VALUE_CHECK(inValue)                                                      \
+do                                                                                \
+{                                                                                 \
+    if (!IsValidValue(&inValue))                                                  \
+    {                                                                             \
+        SPU_ERRORS_LOG_ERROR(SpuErrors::VALUES_COULD_NOT_BE_USED_FOR_ARITHMETIC); \
+                      return SpuErrors::VALUES_COULD_NOT_BE_USED_FOR_ARITHMETIC;  \
+    }                                                                             \
+} while (0)
+
+/// @brief verifies spu and returns
+#ifndef NDEBUG
+
+    #define SPU_CHECK(SPU)                      \
+    do                                                      \
+    {                                                       \
+        SpuErrors spuError = SpuVerify((SPU));  \
+                                                            \
+        if (spuError != SpuErrors::NO_ERR)                  \
+        {                                                   \
+            SPU_DUMP((SPU));                    \
+            SPU_ERRORS_LOG_ERROR(spuError);                 \
+            return spuError;                                \
+        }                                                   \
+    } while (0)
+    
+#else
+
+    #define SPU_CHECK()
+
+#endif
+
+#define DEF_CMD(name, num, haveArgs, switchCode, functionCode, ...)  functionCode
+
+//-------_Creating functions--------------
+#include "../Common/Commands.h"
+
+#undef DEF_CMD
+
 /// @brief Spu check with dtor
-#define SPU_CHECK(SPU)          \
+#define SPU_CHECK_WITH_DTOR(SPU)          \
 do                                                              \
 {                                                               \
     SpuErrors verifyingError = SpuVerify(&(SPU));   \
@@ -105,12 +174,6 @@ do                                                              \
                       return verifyingError;                    \
     }                                                           \
 } while (0)
-
-//----------constants-------------
-
-static const VersionType SpuVersion = 1; 
-
-//--------functions realization------
 
 #define DEF_CMD(name, num, haveArgs, code, ...)        \
     case Commands::name ##_ID:                         \
@@ -139,7 +202,7 @@ SpuErrors Processing(FILE* inStream)
     
     SpuErrors SpuError = SpuErrors::NO_ERR;
 
-    SPU_CHECK(spu);
+    SPU_CHECK_WITH_DTOR(spu);
 
     int command = -1;
     while (true)
@@ -164,7 +227,7 @@ SpuErrors Processing(FILE* inStream)
         if (SpuError != SpuErrors::NO_ERR)
             break;
 
-        SPU_CHECK(spu);
+        SPU_CHECK_WITH_DTOR(spu);
 
         if (quitCycle)
             break;
@@ -177,316 +240,8 @@ SpuErrors Processing(FILE* inStream)
     return SpuErrors::NO_ERR;
 }
 
-#undef SPU_CHECK
-
-/// @brief verifies spu and returns
-#ifndef NDEBUG
-
-    #define SPU_CHECK(SPU)                      \
-    do                                                      \
-    {                                                       \
-        SpuErrors spuError = SpuVerify((SPU));  \
-                                                            \
-        if (spuError != SpuErrors::NO_ERR)                  \
-        {                                                   \
-            SPU_DUMP((SPU));                    \
-            SPU_ERRORS_LOG_ERROR(spuError);                 \
-            return spuError;                                \
-        }                                                   \
-    } while (0)
-    
-#else
-
-    #define SPU_CHECK()
-
-#endif
-
-/// @brief push and return error
-#define STACK_PUSH(SPU, VALUE_TO_PUSH)                           \
-do                                                                                \
-{                                                                                 \
-    StackErrorsType stackErr = StackPush(&(SPU)->stack, (VALUE_TO_PUSH));     \
-                                                                                  \
-    if (stackErr)                                                                 \
-    {                                                                             \
-        SPU_ERRORS_LOG_ERROR(SpuErrors::STACK_ERR);                               \
-                      return SpuErrors::STACK_ERR;                                \
-    }                                                                             \
-                                                                                  \
-} while (0)
-
-static SpuErrors CommandPush(SpuType* spu)
-{
-    assert(spu);
-
-    SPU_CHECK(spu);
-
-    int valueToPush = *spu->byteCodeArrayReadPtr++;
-    valueToPush *= CalculatingPrecision;
-
-    STACK_PUSH(spu, valueToPush);
-
-    SPU_CHECK(spu);
-    
-    return SpuErrors::NO_ERR;
-}
-
-static SpuErrors CommandPushRegister(SpuType* spu)
-{
-    assert(spu);
-
-    SPU_CHECK(spu);
-
-    int registerId = *spu->byteCodeArrayReadPtr++;
-
-    if (registerId < 0 || (size_t)registerId >= NumberOfRegisters)
-    {
-        SPU_ERRORS_LOG_ERROR(SpuErrors::INVALID_REGISTER);
-                      return SpuErrors::INVALID_REGISTER;
-    }
-
-    assert(0 <= registerId && (size_t) registerId < NumberOfRegisters);
-
-    STACK_PUSH(spu, spu->registers[registerId]);
-
-    SPU_CHECK(spu);
-
-    return SpuErrors::NO_ERR;
-}
-
-static SpuErrors CommandPop(SpuType* spu)
-{
-    assert(spu);
-
-    SPU_CHECK(spu);
-
-    int registerId = *spu->byteCodeArrayReadPtr++;
-
-    if (registerId < 0 || (size_t)registerId >= NumberOfRegisters)
-    {
-        SPU_ERRORS_LOG_ERROR(SpuErrors::INVALID_REGISTER);
-                      return SpuErrors::INVALID_REGISTER;
-    }
-
-    assert(0 <= registerId && (size_t)registerId < NumberOfRegisters);
-
-    StackErrorsType stackError = StackPop(&spu->stack, &spu->registers[registerId]);
-
-    if (stackError)
-    {
-        SPU_ERRORS_LOG_ERROR(SpuErrors::STACK_ERR);
-                      return SpuErrors::STACK_ERR;
-    }
-
-    SPU_CHECK(spu);
-
-    return SpuErrors::NO_ERR;
-}
-
-static SpuErrors CommandIn(SpuType* spu)
-{
-    assert(spu);
-
-    SPU_CHECK(spu);
-
-    int valueToPush = POISON;
-    
-    printf("Enter value: ");
-    int scanfResult = scanf(ElemTypeFormat, &valueToPush);
-    
-    if (scanfResult != 1)
-    {
-        SPU_ERRORS_LOG_ERROR(SpuErrors::READING_FROM_BYTE_CODE_ERR);
-                      return SpuErrors::READING_FROM_BYTE_CODE_ERR;
-    }
-    
-    valueToPush *= CalculatingPrecision;
-
-    STACK_PUSH(spu, valueToPush);
-
-    SPU_CHECK(spu);
-    
-    return SpuErrors::NO_ERR;
-}
-
-#define VALUES_CHECK(FIRST_VALUE, SECOND_VALUE)                                   \
-do                                                                                \
-{                                                                                 \
-    if (!IsValidValues(&(FIRST_VALUE), &(SECOND_VALUE)))                          \
-    {                                                                             \
-        SPU_ERRORS_LOG_ERROR(SpuErrors::VALUES_COULD_NOT_BE_USED_FOR_ARITHMETIC); \
-                      return SpuErrors::VALUES_COULD_NOT_BE_USED_FOR_ARITHMETIC;  \
-    }                                                                             \
-} while (0)
-
-static inline SpuErrors CommandDiv(int inFirstValue, int inSecondValue, int* outValue)
-{
-    assert(outValue);
-
-    VALUES_CHECK(inFirstValue, inSecondValue);
-
-    if (inSecondValue == 0)
-    {
-        *outValue = POISON;
-        SPU_ERRORS_LOG_ERROR(SpuErrors::TRYING_TO_DIVIDE_ON_ZERO);
-                      return SpuErrors::TRYING_TO_DIVIDE_ON_ZERO;
-    }
-
-    *outValue = CalculatingPrecision * inFirstValue / inSecondValue;
-    
-    return SpuErrors::NO_ERR;
-}
-
-static inline SpuErrors CommandMul(int inFirstValue, int inSecondValue, int* outValue)
-{
-    assert(outValue);
-
-    VALUES_CHECK(inFirstValue, inSecondValue);
-
-    *outValue = inFirstValue * inSecondValue / CalculatingPrecision;
-    
-    return SpuErrors::NO_ERR;
-}
-
-static inline SpuErrors CommandSub(int inFirstValue, int inSecondValue, int* outValue)
-{
-    assert(outValue);
-
-    VALUES_CHECK(inFirstValue, inSecondValue);
-
-    *outValue = inFirstValue - inSecondValue;
-    
-    return SpuErrors::NO_ERR;
-}
-
-static inline SpuErrors CommandAdd(int inFirstValue, int inSecondValue, int* outValue)
-{
-    assert(outValue);
-
-    VALUES_CHECK(inFirstValue, inSecondValue);
-
-    *outValue = inFirstValue + inSecondValue;
-    
-    return SpuErrors::NO_ERR;
-}
-
-#define VALUE_CHECK(inValue)                                                      \
-do                                                                                \
-{                                                                                 \
-    if (!IsValidValue(&inValue))                                                  \
-    {                                                                             \
-        SPU_ERRORS_LOG_ERROR(SpuErrors::VALUES_COULD_NOT_BE_USED_FOR_ARITHMETIC); \
-                      return SpuErrors::VALUES_COULD_NOT_BE_USED_FOR_ARITHMETIC;  \
-    }                                                                             \
-} while (0)
-
-static inline SpuErrors CommandSin(int inValue, int* outValue)
-{
-    assert(outValue);
-
-    VALUE_CHECK(inValue);
-
-    *outValue = (int)(sin(1.0 * inValue / CalculatingPrecision) * CalculatingPrecision);
-
-    return SpuErrors::NO_ERR;
-}
-
-static inline SpuErrors CommandCos(int inValue, int* outValue)
-{
-    assert(outValue);
-
-    VALUE_CHECK(inValue);
-
-    *outValue = (int)(cos(1.0 * inValue / CalculatingPrecision) * CalculatingPrecision);
-
-    return SpuErrors::NO_ERR;
-}
-
-static inline SpuErrors CommandTan(int inValue, int* outValue)
-{
-    assert(outValue);
-
-    VALUE_CHECK(inValue);
-
-    *outValue = (int)(tan(1.0 * inValue / CalculatingPrecision) * CalculatingPrecision);
-
-    return SpuErrors::NO_ERR;
-}
-
-static inline SpuErrors CommandCot(int inValue, int* outValue)
-{
-    assert(outValue);
-
-    VALUE_CHECK(inValue);
-
-    *outValue = (int)(CalculatingPrecision / tan(1.0 * inValue / CalculatingPrecision));
-
-    return SpuErrors::NO_ERR;
-}
-
-static inline SpuErrors CommandPow2(int inValue, int* outValue)
-{
-    assert(outValue);
-
-    VALUE_CHECK(inValue);
-
-    *outValue = inValue * inValue / CalculatingPrecision;
-
-    return SpuErrors::NO_ERR;
-}
-
-static inline SpuErrors CommandSqrt(int inValue, int* outValue)
-{
-    assert(outValue);
-
-    VALUE_CHECK(inValue);
-
-    *outValue = (int)(sqrt(inValue) * sqrt(CalculatingPrecision));
-
-    return SpuErrors::NO_ERR;
-}
-
-static inline SpuErrors CommandMeow()
-{
-    system("say -v cello \"Meow meow meow meow\"");
-
-    return SpuErrors::NO_ERR;
-}
-
-static inline SpuErrors CommandBark()
-{
-    system("say -v \"Bad Bark bark bark bark\"");
-
-    return SpuErrors::NO_ERR;
-}
-
-static inline SpuErrors CommandSleep()
-{
-    system("say -v Bad \"It's time to sleep\"");
-
-    return SpuErrors::NO_ERR;
-}
-
-static inline SpuErrors CommandBotay()
-{
-    system("say \"время ботать\"");
-
-    return SpuErrors::NO_ERR;
-}
-
-static inline SpuErrors CommandOut(int inValue, int* outValue)
-{
-    assert(outValue);
-
-    VALUE_CHECK(inValue);
-
-    printf("Equation result: " "%lf" "\n", 1.0 * inValue / CalculatingPrecision);
-
-    return SpuErrors::NO_ERR;
-}
-
-#undef VALUES_CHECK
-#undef VALUE_CHECK
+#undef DEF_CMD
+#undef SPU_CHECK_WITH_DTOR
 
 static SpuErrors CallUnaryCommand (SpuErrors (*Command)(int, int*), SpuType* spu)
 {
@@ -723,9 +478,6 @@ void SpuErrorsLogError(SpuErrors error, const char* fileName,
         case SpuErrors::BYTE_CODE_ARR_PTR_OUT_OF_RANGE:
             LOG_ERR("Byte code reading pointer is out of range.\n");
             break;
-        case SpuErrors::BYTE_CODE_FILE_IS_NULLPTR:
-            LOG_ERR("Byte code file is nullptr.\n");
-            break;
         
         case SpuErrors::INVALID_SIGNATURE:
             LOG_ERR("Invalid signature.\n");
@@ -752,9 +504,8 @@ static inline SpuErrors SkipAddedInfo(SpuType* spu)
 
     SPU_CHECK(spu);
 
-    assert(spu->byteCodeArray[0] > 0);
 
-    spu->byteCodeArrayReadPtr += spu->byteCodeArray[0];
+    spu->byteCodeArrayReadPtr += AddedInfoSizeByteCode;
 
     SPU_CHECK(spu);
 
@@ -788,3 +539,5 @@ static inline SpuErrors FileVerify(SpuType* spu)
 
     return SpuErrors::NO_ERR;
 }
+
+#undef SPU_CHECK

@@ -187,7 +187,7 @@ static inline int* AddSpecificationInfo(int* byteCode, const size_t asmFileSize,
     byteCode[SignatureInfoPosition]      = Signature;
     byteCode[VersionInfoPosition]        = AssemblyVersion;
 
-    return byteCode;
+    return byteCode + AddedInfoSizeByteCode;
 }
 
 static inline int GetRegisterId(const char* reg)

@@ -16,6 +16,7 @@
         "unordered_map": "cpp",
         "format": "cpp",
         "typeinfo": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "system_error": "cpp"
     }
 }
