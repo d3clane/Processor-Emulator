@@ -16,7 +16,7 @@ static inline CommandsErrors FileVerify(int* byteCode);
 
 static inline size_t CopyValue(const int* source, char* target, char** targetEndPtr);
 static inline size_t CopyRegister(const int* source, char* target, char** targetEndPtr);
-static inline size_t CopyArguments(Commands command, const int* source, 
+static inline size_t CopyArguments(CommandArguments argId, const int* source, 
                                    char* target, char** targetEndPtr);
 static inline char* SprintfRegisterName(char* targPtr, const size_t registerId);
 
@@ -26,9 +26,10 @@ static const uint32_t DisassemblyVersion = 1;
 
 //------Auto generating define----------
 
-#define DEF_CMD(name, num, haveArgs, ...)                                               \
+#define DEF_CMD(name, num, asmCode, argId, ...)                                         \
     case Commands::name ##_ID:                                                          \
-        asmCodePtr += sprintf(asmCodePtr, "%s ", #name);                                \
+        asmCodePtr  += sprintf(asmCodePtr, "%s ", #name);                               \
+        byteCodePtr += CopyArguments(argId, byteCodePtr, asmCodePtr, &asmCodePtr);      \
         break;
 
 CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
@@ -50,13 +51,11 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
 
     static const size_t asmCodeSizeMultiplier = 2;
     const int disasmFileSize = ReadDisasmFileSize(byteCodePtr) * asmCodeSizeMultiplier;
-    //TODO: наверное чет сделать с этим, возникает из-за того что дизассемблер PUSH-> PUSH_REGISTER
     assert(disasmFileSize > 0);
 
     byteCodePtr = SkipAddedInfo(byteCodePtr, AddedInfoSizeByteCode);
 
-    //TODO: магическую двоечку бы пофиксить возникает в двух ассертах снизу
-    char* asmCode    = (char*) calloc(asmCodeSizeMultiplier * disasmFileSize, sizeof(char));
+    char* asmCode    = (char*) calloc(disasmFileSize, sizeof(char));
     char* asmCodePtr = asmCode;
 
     while (true)
@@ -87,7 +86,6 @@ CommandsErrors Disassembly(FILE* inStream, FILE* outStream)
             return CommandsErrors::INVALID_COMMAND_ID;
         }
 
-        byteCodePtr += CopyArguments((Commands) command, byteCodePtr, asmCodePtr, &asmCodePtr);
         *asmCodePtr++ = '\n';
 
         if (command == (int) Commands::HLT_ID)
@@ -147,22 +145,19 @@ static inline size_t CopyRegister(const int* source, char* target, char** target
     return 1;
 }
 
-static inline size_t CopyArguments(Commands command, const int* source, 
+static inline size_t CopyArguments(CommandArguments argId, const int* source, 
                                    char* target, char** targetEndPtr)
 {
-    switch (command)
+    switch (argId)
     {
-    case Commands::PUSH_ID:
-        return CopyValue(source, target, targetEndPtr);
-        break;
+        case CommandArguments::ONE_INT_VALUE_ID:
+            return CopyValue(source, target, targetEndPtr);
+        case CommandArguments::ONE_REGISTER_ID:
+            return CopyRegister(source, target, targetEndPtr);
 
-    case Commands::POP_ID:
-    case Commands::PUSH_REGISTER_ID:
-        return CopyRegister(source, target, targetEndPtr);
-        break;
-
-    default:
-        break;
+        case CommandArguments::NO_ARGS_ID:
+        default:
+            break;
     }
 
     return 0;
@@ -173,7 +168,7 @@ static inline char* SprintfRegisterName(char* targPtr, const size_t registerId)
     assert(targPtr);
     assert(0 <= registerId && registerId < NumberOfRegisters);
 
-    return targPtr + sprintf(targPtr, "r%cx",(char)('a' + registerId));
+    return targPtr + sprintf(targPtr, "r%cx", (char)('a' + registerId));
 }
 
 static inline int* SkipAddedInfo(int* byteCode, const size_t addedInfoSizeByteCode)
@@ -187,7 +182,7 @@ static inline int ReadDisasmFileSize(int* byteCode)
 {
     assert(byteCode);
 
-    int disasmFileSize = byteCode[DisasmFileSizeInfoPosition];
+    int disasmFileSize = byteCode[DISASM_FILE_SIZE_INFO_POSITION];
 
     assert(disasmFileSize > 0);
 
@@ -205,7 +200,7 @@ static inline CommandsErrors FileVerify(int* byteCode)
 {
     assert(byteCode);
 
-    int disasmFileSize = byteCode[DisasmFileSizeInfoPosition];
+    int disasmFileSize = byteCode[DISASM_FILE_SIZE_INFO_POSITION];
 
     if (disasmFileSize < 0)
     {
@@ -213,7 +208,7 @@ static inline CommandsErrors FileVerify(int* byteCode)
                     return CommandsErrors::INVALID_ADDED_INFO;  
     }
 
-    SignatureType fileSignature = byteCode[SignatureInfoPosition];
+    SignatureType fileSignature = byteCode[SIGNATURE_INFO_POSITION];
     
     if (fileSignature != Signature)
     {
@@ -221,7 +216,7 @@ static inline CommandsErrors FileVerify(int* byteCode)
                            return CommandsErrors::INVALID_SIGNATURE; 
     }
     
-    VersionType fileVersion = byteCode[VersionInfoPosition];
+    VersionType fileVersion = byteCode[VERSION_INFO_POSITION];
 
     if (fileVersion != DisassemblyVersion)
     {

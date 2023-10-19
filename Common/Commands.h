@@ -31,6 +31,7 @@ DEF_CMD(PUSH_REGISTER, 0,
 {
     PUSH_PRINT_ASM;
 },
+CommandArguments::ONE_REGISTER_ID,
 {
     SpuError = CommandPushRegister(&spu);
 },
@@ -65,6 +66,7 @@ DEF_CMD(PUSH, 1,
 {
     PUSH_PRINT_ASM
 },
+CommandArguments::ONE_INT_VALUE_ID,
 {
     SpuError = CommandPush(&spu);
 },
@@ -96,6 +98,7 @@ DEF_CMD(IN, 2,
 {
     NO_ARGS_INSTRUCTIONS_PRINT_ASM(2);
 },
+CommandArguments::NO_ARGS_ID,
 {
     SpuError = CommandIn(&spu);
 },
@@ -143,6 +146,7 @@ DEF_CMD(POP, 3,
     else
         *byteCodePtr++ = registerId;
 },
+CommandArguments::ONE_REGISTER_ID,
 {
     SpuError = CommandPop(&spu);
 },
@@ -183,6 +187,7 @@ DEF_CMD(MUL, 4,
 {
     NO_ARGS_INSTRUCTIONS_PRINT_ASM(4);
 },
+CommandArguments::NO_ARGS_ID,
 {
     SpuError = CallBinaryCommand(CommandMul, &spu);
 },
@@ -206,6 +211,7 @@ DEF_CMD(ADD, 5,
 {
     NO_ARGS_INSTRUCTIONS_PRINT_ASM(5);
 },
+CommandArguments::NO_ARGS_ID,
 {
     SpuError = CallBinaryCommand(CommandAdd, &spu);
 },
@@ -228,6 +234,7 @@ DEF_CMD(DIV, 6,
 {
     NO_ARGS_INSTRUCTIONS_PRINT_ASM(6);
 },
+CommandArguments::NO_ARGS_ID,
 {
     SpuError = CallBinaryCommand(CommandDiv, &spu);
 },
@@ -257,6 +264,7 @@ DEF_CMD(SUB, 7,
 {
     NO_ARGS_INSTRUCTIONS_PRINT_ASM(7);
 },
+CommandArguments::NO_ARGS_ID,
 {
     SpuError = CallBinaryCommand(CommandSub, &spu);
 },
@@ -279,6 +287,7 @@ DEF_CMD(SIN, 8,
 {
     NO_ARGS_INSTRUCTIONS_PRINT_ASM(8);
 },
+CommandArguments::NO_ARGS_ID,
 {
     SpuError = CallUnaryCommand(CommandSin, &spu);
 },
@@ -301,6 +310,7 @@ DEF_CMD(COS,  9,
 {
     NO_ARGS_INSTRUCTIONS_PRINT_ASM(9);
 },
+CommandArguments::NO_ARGS_ID,
 {
     SpuError = CallUnaryCommand(CommandCos, &spu);
 },
@@ -323,6 +333,7 @@ DEF_CMD(TAN, 10,
 {
     NO_ARGS_INSTRUCTIONS_PRINT_ASM(10);
 },
+CommandArguments::NO_ARGS_ID,
 {
     SpuError = CallUnaryCommand(CommandTan, &spu);
 },
@@ -345,6 +356,7 @@ DEF_CMD(COT, 11,
 {
     NO_ARGS_INSTRUCTIONS_PRINT_ASM(11);
 },
+CommandArguments::NO_ARGS_ID,
 {
     SpuError = CallUnaryCommand(CommandCot, &spu);
 },
@@ -367,6 +379,7 @@ DEF_CMD(SQRT, 12,
 {
     NO_ARGS_INSTRUCTIONS_PRINT_ASM(12);
 },
+CommandArguments::NO_ARGS_ID,
 {
     SpuError = CallUnaryCommand(CommandSqrt, &spu);
 },
@@ -389,6 +402,7 @@ DEF_CMD(POW2, 13,
 {
     NO_ARGS_INSTRUCTIONS_PRINT_ASM(13);
 },
+CommandArguments::NO_ARGS_ID,
 {
     SpuError = CallUnaryCommand(CommandPow2, &spu);
 },
@@ -411,6 +425,7 @@ DEF_CMD(MEOW , 14,
 {
     NO_ARGS_INSTRUCTIONS_PRINT_ASM(14);
 },
+CommandArguments::NO_ARGS_ID,
 {
     SpuError = CommandMeow();
 },
@@ -429,6 +444,7 @@ DEF_CMD(BARK , 15,
 {
     NO_ARGS_INSTRUCTIONS_PRINT_ASM(15);
 },
+CommandArguments::NO_ARGS_ID,
 {
     SpuError = CommandBark();
 },
@@ -447,6 +463,7 @@ DEF_CMD(SLEEP, 16,
 {
     NO_ARGS_INSTRUCTIONS_PRINT_ASM(16);
 },
+CommandArguments::NO_ARGS_ID,
 {
     SpuError = CommandSleep();
 },
@@ -465,6 +482,7 @@ DEF_CMD(BOTAY, 17,
 {
     NO_ARGS_INSTRUCTIONS_PRINT_ASM(17);
 },
+CommandArguments::NO_ARGS_ID,
 {
     SpuError = CommandBotay();
 },
@@ -483,6 +501,7 @@ DEF_CMD(OUT, 18,
 {
     NO_ARGS_INSTRUCTIONS_PRINT_ASM(18);
 },
+CommandArguments::NO_ARGS_ID,
 {
     SpuError = CallUnaryCommand(CommandOut, &spu);
 },
@@ -505,6 +524,7 @@ DEF_CMD(HLT, 19,
 {
     NO_ARGS_INSTRUCTIONS_PRINT_ASM(19);
 },
+CommandArguments::NO_ARGS_ID,
 {
     quitCycle = true;
 },

@@ -151,7 +151,7 @@ do                                                                              
 
 #endif
 
-#define DEF_CMD(name, num, haveArgs, switchCode, functionCode, ...)  functionCode
+#define DEF_CMD(name, num, asmCode, argId, switchCode, functionCode, ...)  functionCode
 
 //-------_Creating functions--------------
 #include "../Common/Commands.h"
@@ -175,7 +175,7 @@ do                                                              \
     }                                                           \
 } while (0)
 
-#define DEF_CMD(name, num, haveArgs, code, ...)        \
+#define DEF_CMD(name, num, asmCode, argId, code, ...)  \
     case Commands::name ##_ID:                         \
         code;                                          \
         break;
@@ -520,8 +520,7 @@ static inline SpuErrors FileVerify(SpuType* spu)
 
     int* byteCodeArrayReadPtr = spu->byteCodeArrayReadPtr;
 
-
-    SignatureType fileSignature = (SignatureType) byteCodeArrayReadPtr[SignatureInfoPosition];
+    SignatureType fileSignature = (SignatureType) byteCodeArrayReadPtr[SIGNATURE_INFO_POSITION];
 
     if (fileSignature != Signature)
     {
@@ -529,7 +528,7 @@ static inline SpuErrors FileVerify(SpuType* spu)
                       return SpuErrors::INVALID_SIGNATURE;
     }
 
-    VersionType fileVersion = (VersionType) byteCodeArrayReadPtr[VersionInfoPosition];
+    VersionType fileVersion = (VersionType) byteCodeArrayReadPtr[VERSION_INFO_POSITION];
     
     if (fileVersion != SpuVersion)
     {

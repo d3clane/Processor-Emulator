@@ -102,9 +102,9 @@ static inline int* AddSpecificationInfo(int* byteCode, const size_t asmFileSize,
 {
     assert(byteCode);
 
-    byteCode[DisasmFileSizeInfoPosition] = asmFileSize;
-    byteCode[SignatureInfoPosition]      = Signature;
-    byteCode[VersionInfoPosition]        = AssemblyVersion;
+    byteCode[DISASM_FILE_SIZE_INFO_POSITION] = asmFileSize;
+    byteCode[SIGNATURE_INFO_POSITION]      = Signature;
+    byteCode[VERSION_INFO_POSITION]        = AssemblyVersion;
 
     return byteCode + addedInfoSizeByteCode;
 }

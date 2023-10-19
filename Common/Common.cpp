@@ -37,6 +37,9 @@ void CommandsErrorsLogError(CommandsErrors error, const char* fileName,
     case CommandsErrors::INVALID_SIGNATURE:
         LOG_ERR("Wrong signature in file. Can't disassembler.\n");
         break;
+    case CommandsErrors::INVALID_ADDED_INFO:
+        LOG_ERR("Invalid added info.\n");
+        break;
     
     case CommandsErrors::INVALID_COMMAND_SYNTAX:
         LOG_ERR("Invalid syntax.\n");

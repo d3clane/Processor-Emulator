@@ -34,10 +34,16 @@ static const size_t AddedInfoSizeByteCode = 3;
 
 enum AddedInfoPositions
 {
-    DisasmFileSizeInfoPosition = 0,
-    SignatureInfoPosition      = 1,
-    VersionInfoPosition        = 2,
+    DISASM_FILE_SIZE_INFO_POSITION = 0,
+    SIGNATURE_INFO_POSITION        = 1,
+    VERSION_INFO_POSITION          = 2,
+};
 
+enum class CommandArguments
+{
+    NO_ARGS_ID,
+    ONE_INT_VALUE_ID,
+    ONE_REGISTER_ID,
 };
 
 static const size_t NumberOfRegisters    = 4;      
