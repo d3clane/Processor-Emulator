@@ -13,8 +13,9 @@ static inline int* AddSpecificationInfo(int* byteCode, const size_t asmFileSize,
                                                        const size_t addedInfoSizeByteCode);
 
 //------------Writing to array commands--------------
+
 static inline int* CallFunctionWithArgs(const char* commandName, 
-                                    int* byteCode, LineType* asmCode);
+                                        int* byteCode, LineType* asmCode);
 
 static inline int* WritePushCommand(int* byteCode, LineType* asmCode);
 static inline int* WritePopCommand (int* byteCode, LineType* asmCode);
