@@ -529,13 +529,31 @@ static inline void CommandHlt()
 }
 )
 
+#define PRINT_JMP_ASM(name, num) \
+{   \
+    PRINT_COMMAND_ID_ASM(num); \
+\
+    int copyResult = CopyIntArgument(asmCode.lines[line].line + strlen(#name), byteCodePtr, &byteCodePtr); \
+\
+    if (copyResult == 0) \
+    { \
+        static const char maxLabelLength      = 32;\
+        static char labelName[maxLabelLength] = "";\
+\
+        sscanf(asmCode.lines[line].line + strlen(#name),  "%s", labelName);\
+\
+        LabelType* tmpLabel = GetLabel(labels, maxNumberOfLabels, labelName);\
+\
+        if (tmpLabel == nullptr)\
+            *byteCodePtr++ = -1;\
+        else\
+            *byteCodePtr++ = tmpLabel->jmpAdress;\
+    }\
+}
+
 DEF_CMD(JMP, 20,
 {
-    PRINT_COMMAND_ID_ASM(20);
-    int copyResult = CopyIntArgument(asmCode.lines[line].line + strlen(JMP), byteCodePtr, &byteCodePtr);
-
-    if (copyResult == 0)
-        COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_SYNTAX);
+    PRINT_JMP_ASM(JMP, 20);
 },
 CommandArguments::ONE_INT_VALUE_ID,
 {
@@ -548,15 +566,136 @@ static inline SpuErrors CommandJmp(SpuType* spu)
 
     SPU_CHECK(spu);
 
-    int valueToJump = *spu->byteCodeArrayReadPtr++;
+    int posToJump = *spu->byteCodeArrayReadPtr++;
 
-    assert(valueToJump > 0);
+    assert(posToJump > 0);
 
-    spu->byteCodeArrayReadPtr = spu->byteCodeArray + valueToJump;
+    spu->byteCodeArrayReadPtr = spu->byteCodeArray + posToJump;
 
     SPU_CHECK(spu);
 
     return SpuErrors::NO_ERR;    
+}
+)
+
+#define COMMAND_JUMP(comparisonSign) \
+{\
+    assert(spu);\
+\
+    SPU_CHECK(spu);\
+\
+    int firstValue  = POISON;\
+    int secondValue = POISON;\
+\
+    SpuErrors error = GetTwoLastValuesFromStack(&spu->stack, &firstValue, &secondValue);\
+\
+    IF_ERR_RETURN(error);\
+    \
+    if (firstValue comparisonSign secondValue)\
+    {\
+        error = CommandJmp(spu);\
+    }\
+\
+    return error; \
+}
+
+DEF_CMD(JB, 21, 
+{
+    PRINT_JMP_ASM(JB, 21);
+},
+CommandArguments::ONE_INT_VALUE_ID,
+{
+    SpuError = CommandJb(&spu);
+},
+
+static inline SpuErrors CommandJb(SpuType* spu)
+{
+    COMMAND_JUMP(<);
+}
+)
+
+//-----------------------
+
+DEF_CMD(JA, 22, 
+{
+    PRINT_JMP_ASM(JA, 22);
+},
+CommandArguments::ONE_INT_VALUE_ID,
+{
+    SpuError = CommandJa(&spu);
+},
+
+static inline SpuErrors CommandJa(SpuType* spu)
+{
+    COMMAND_JUMP(>);
+}
+)
+
+//-----------------------
+
+DEF_CMD(JAE, 23, 
+{
+    PRINT_JMP_ASM(JAE, 23);
+},
+CommandArguments::ONE_INT_VALUE_ID,
+{
+    SpuError = CommandJae(&spu);
+},
+
+static inline SpuErrors CommandJae(SpuType* spu)
+{
+    COMMAND_JUMP(>=);
+}
+)
+
+//-----------------------
+
+DEF_CMD(JBE, 24, 
+{
+    PRINT_JMP_ASM(JBE, 24);
+},
+CommandArguments::ONE_INT_VALUE_ID,
+{
+    SpuError = CommandJbe(&spu);
+},
+
+static inline SpuErrors CommandJbe(SpuType* spu)
+{
+    COMMAND_JUMP(<=);
+}
+)
+
+//-----------------------
+
+DEF_CMD(JE, 25, 
+{
+    PRINT_JMP_ASM(JE, 25);
+},
+CommandArguments::ONE_INT_VALUE_ID,
+{
+    SpuError = CommandJe(&spu);
+},
+
+static inline SpuErrors CommandJe(SpuType* spu)
+{
+    COMMAND_JUMP(==);
+}
+)
+
+//-----------------------
+
+DEF_CMD(JNE, 26, 
+{
+    PRINT_JMP_ASM(JNE, 26);
+},
+CommandArguments::ONE_INT_VALUE_ID,
+{
+    SpuError = CommandJne(&spu);
+},
+
+static inline SpuErrors CommandJne(SpuType* spu)
+{
+    COMMAND_JUMP(!=);
 }
 )
 

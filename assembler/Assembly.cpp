@@ -5,6 +5,25 @@
 #include "Assembly.h"
 #include "../InputOutput/InputOutput.h"
 
+struct LabelType
+{
+    int jmpAdress;
+    const char* labelName;
+};
+
+static inline void LabelTypeCtor(LabelType* label);
+static inline void LabelsArrayCtor(LabelType* arr, const size_t size);
+static inline void LabelTypeDtor(LabelType* label);
+static inline void LabelsArrayDtor(LabelType* arr, const size_t size);
+static inline LabelType* SetLabel(LabelType* arr, const size_t pos,  const char* labelName, 
+                                                                     const int   labelAdress);
+static inline LabelType* GetLabel(LabelType* arr, const size_t size, const char* labelName);
+static inline int GetLabelAdress(const int *byteCodePtr, const int* byteCodeBegin);
+static inline bool IsLabel(const char* labelName);
+
+//HAVE TO BE LABLE ON INPUT
+static inline size_t GetLabelLength(const char* labelName);
+
 static const VersionType AssemblyVersion = 1;
 
 static inline int GetRegisterId(const char* reg);
@@ -39,31 +58,58 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
 
     byteCodePtr = AddSpecificationInfo(byteCodePtr, asmCode.textSz, AddedInfoSizeByteCode);
 
-    static const size_t maxCommandLength  =  8;
+    static const size_t maxCommandLength  = 32;
     static char command[maxCommandLength] = "";
 
-    for (size_t line = 0; line < asmCode.linesCnt; ++line)
+    static const size_t maxNumberOfLabels      = 10;
+    static LabelType labels[maxNumberOfLabels] = {{}};
+    LabelsArrayCtor(labels, maxNumberOfLabels);
+
+    const size_t numberOfCompilations = 2;
+          size_t labelSetPosition     = 0;
+
+    for (size_t compilationId = 0; compilationId < numberOfCompilations; ++compilationId)
     {
-        sscanf(asmCode.lines[line].line, "%s", command);
-
-        #include "../Common/Commands.h"
-
-        /* else */
+        for (size_t line = 0; line < asmCode.linesCnt; ++line)
         {
-            printf("Invalid command: %s\n", command);
-            TextTypeDestructor(&asmCode);
+            sscanf(asmCode.lines[line].line, "%s", command);
 
-            free(byteCode);
-            byteCode    = nullptr;
-            byteCodePtr = nullptr;
+            if (compilationId == 0 && IsLabel(command))
+            {
+                assert(labelSetPosition < maxNumberOfLabels);
 
-            COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_STRING);
-                               return CommandsErrors::INVALID_COMMAND_STRING;
+                SetLabel(labels, labelSetPosition, command, GetLabelAdress(byteCodePtr, byteCode));
+
+                ++labelSetPosition;
+                continue;
+            }
+
+            //TODO: какой-то костыль, мб создать функцию firstCompilation(), secondCompilation(), а то как-то супер не оч
+            if (IsLabel(command)) continue;
+
+            #include "../Common/Commands.h"
+
+            /* else */
+            {
+                printf("Invalid command: %s\n", command);
+                TextTypeDestructor(&asmCode);
+
+                free(byteCode);
+                byteCode    = nullptr;
+                byteCodePtr = nullptr;
+
+                COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_STRING);
+                                   return CommandsErrors::INVALID_COMMAND_STRING;
+            }
         }
 
+        //TODO: запихать в функцию какую-нибудь потому что вот это плохо выглядит(
+        if (compilationId != numberOfCompilations - 1)
+            byteCodePtr = byteCode + AddedInfoSizeByteCode;
     }
 
     assert(byteCodePtr - byteCode > 0);
+
     PrintByteCode(byteCode, (size_t)(byteCodePtr - byteCode), outStream);
 
     TextTypeDestructor(&asmCode);
@@ -84,8 +130,9 @@ static inline int CopyIntArgument(const char* source, int* target, int** targetE
     assert(targetEndPtr);
 
     int scanfResult = sscanf(source, "%d", target);
-
-    *targetEndPtr = target + 1;
+    
+    if (scanfResult != 0)
+        *targetEndPtr = target + 1;
 
     return scanfResult;
 }
@@ -147,4 +194,115 @@ static inline int GetRegisterId(const char* reg)
         return -1;
     
     return reg[1] - 'a';
+}
+
+static inline void LabelTypeCtor(LabelType* label)
+{
+    assert(label);
+
+    label->jmpAdress = -1;
+    label->labelName = nullptr;
+}
+
+static inline void LabelsArrayCtor(LabelType* arr, const size_t size)
+{
+    assert(arr);
+    
+    for (size_t i = 0; i < size; ++i)
+    {
+        LabelTypeCtor(arr + i);
+    }
+}
+
+static inline void LabelTypeDtor(LabelType* label)
+{
+    assert(label);
+
+    label->jmpAdress = -1;
+
+    if (label->labelName)
+        free((void*)label->labelName);
+
+    label->labelName = nullptr;
+}
+
+static inline void LabelsArrayDtor(LabelType* arr, const size_t size)
+{
+    assert(arr);
+
+    for (size_t i = 0; i < size; ++i)
+    {
+        LabelTypeDtor(arr + i);
+    }
+}
+
+//Creating dynamic array
+static inline LabelType* SetLabel(LabelType* arr, const size_t pos,  const char* labelName, 
+                                                                     const int   labelAdress)
+{
+    assert(arr);
+    assert(labelName);
+
+
+    if (!IsLabel(labelName))
+    {
+        return nullptr;
+    }
+
+    arr[pos].labelName = strdup(labelName);
+    arr[pos].jmpAdress = labelAdress;
+
+    return arr + pos;
+}
+
+static inline LabelType* GetLabel(LabelType* arr, const size_t size, const char* labelName)
+{
+    assert(arr);
+    assert(labelName);
+
+    for (size_t i = 0; i < size; ++i)
+    {
+        if (strcmp(labelName, arr[i].labelName) == 0)
+        {
+            return arr + i;
+        }
+    }
+
+    return nullptr;
+}
+
+static inline int GetLabelAdress(const int *byteCodePtr, const int* byteCodeBegin)
+{
+    assert(byteCodePtr);
+    assert(byteCodeBegin);
+
+    return (int)(byteCodePtr - byteCodeBegin);
+}
+
+static inline bool IsLabel(const char* labelName)
+{
+    assert(labelName);
+
+    const char* labelEndPtr = labelName + strlen(labelName) - 1;
+
+    while (labelEndPtr > labelName)
+    {
+
+        if (*labelEndPtr == ':')
+            return true;
+        
+        if (!isspace(*labelEndPtr))
+            return false;
+
+        labelEndPtr--;
+    }
+
+    return false;
+}
+
+static inline size_t GetLabelLength(const char* labelName)
+{
+    assert(labelName);
+
+    return (size_t) (strchr(labelName, ':') - labelName - 1);
 }
