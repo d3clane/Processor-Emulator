@@ -578,7 +578,7 @@ static inline SpuErrors CommandJmp(SpuType* spu)
 }
 )
 
-#define COMMAND_JUMP(comparisonSign) \
+#define COMMAND_JUMP_IF(comparisonSign) \
 {\
     assert(spu);\
 \
@@ -610,7 +610,7 @@ CommandArguments::ONE_INT_VALUE_ID,
 
 static inline SpuErrors CommandJb(SpuType* spu)
 {
-    COMMAND_JUMP(<);
+    COMMAND_JUMP_IF(<);
 }
 )
 
@@ -627,7 +627,7 @@ CommandArguments::ONE_INT_VALUE_ID,
 
 static inline SpuErrors CommandJa(SpuType* spu)
 {
-    COMMAND_JUMP(>);
+    COMMAND_JUMP_IF(>);
 }
 )
 
@@ -644,7 +644,7 @@ CommandArguments::ONE_INT_VALUE_ID,
 
 static inline SpuErrors CommandJae(SpuType* spu)
 {
-    COMMAND_JUMP(>=);
+    COMMAND_JUMP_IF(>=);
 }
 )
 
@@ -661,7 +661,7 @@ CommandArguments::ONE_INT_VALUE_ID,
 
 static inline SpuErrors CommandJbe(SpuType* spu)
 {
-    COMMAND_JUMP(<=);
+    COMMAND_JUMP_IF(<=);
 }
 )
 
@@ -678,7 +678,7 @@ CommandArguments::ONE_INT_VALUE_ID,
 
 static inline SpuErrors CommandJe(SpuType* spu)
 {
-    COMMAND_JUMP(==);
+    COMMAND_JUMP_IF(==);
 }
 )
 
@@ -695,8 +695,10 @@ CommandArguments::ONE_INT_VALUE_ID,
 
 static inline SpuErrors CommandJne(SpuType* spu)
 {
-    COMMAND_JUMP(!=);
+    COMMAND_JUMP_IF(!=);
 }
 )
 
+#undef PRINT_JMP_ASM
+#undef COMMAND_JUMP_IF
 //-----------------------
