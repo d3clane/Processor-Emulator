@@ -1,8 +1,7 @@
 #define PUSH_PRINT_ASM  \
 {   \
     int value = -1;     \
-    int scanfResult = sscanf(asmCode.lines[line].line + strlen(PUSH), "%d", &value); \
-    \
+    int scanfResult = sscanf(asmCode->lines[line].line + strlen(PUSH), "%d", &value); \
     if (scanfResult == 1)       \
     {   \
         *byteCodePtr++ = (int)Commands::PUSH_ID;   \
@@ -12,7 +11,7 @@
     {   \
         char registerName[RegisterStringLength + 1] = ""; \
                                                                  \
-        scanfResult = sscanf(asmCode.lines[line].line + strlen(PUSH), "%s", registerName); \
+        scanfResult = sscanf(asmCode->lines[line].line + strlen(PUSH), "%s", registerName); \
         int registerId = GetRegisterId(registerName); \
                                         \
         if (registerId == -1) \
@@ -135,7 +134,7 @@ static SpuErrors CommandIn(SpuType* spu)
 DEF_CMD(POP, 3, 
 {
     PRINT_COMMAND_ID_ASM(3);
-    int copyResult = CopyRegisterArgument(asmCode.lines[line].line + strlen(POP), byteCodePtr, &byteCodePtr);
+    int copyResult = CopyRegisterArgument(asmCode->lines[line].line + strlen(POP), byteCodePtr, &byteCodePtr);
 
     if (copyResult == 0)
         COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_SYNTAX);
@@ -533,14 +532,14 @@ static inline void CommandHlt()
 {   \
     PRINT_COMMAND_ID_ASM(num); \
 \
-    int copyResult = CopyIntArgument(asmCode.lines[line].line + strlen(#name), byteCodePtr, &byteCodePtr); \
+    int copyResult = CopyIntArgument(asmCode->lines[line].line + strlen(#name), byteCodePtr, &byteCodePtr); \
 \
     if (copyResult == 0) \
     { \
         static const char maxLabelLength      = 32;\
         static char labelName[maxLabelLength] = "";\
 \
-        sscanf(asmCode.lines[line].line + strlen(#name),  "%s", labelName);\
+        sscanf(asmCode->lines[line].line + strlen(#name),  "%s", labelName);\
 \
         LabelType* tmpLabel = GetLabel(labels, maxNumberOfLabels, labelName);\
 \

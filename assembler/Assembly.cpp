@@ -12,17 +12,28 @@ struct LabelType
 };
 
 static inline void LabelTypeCtor(LabelType* label);
-static inline void LabelsArrayCtor(LabelType* arr, const size_t size);
+static        void LabelsArrayCtor(LabelType* arr, const size_t size);
 static inline void LabelTypeDtor(LabelType* label);
-static inline void LabelsArrayDtor(LabelType* arr, const size_t size);
+static        void LabelsArrayDtor(LabelType* arr, const size_t size);
 static inline LabelType* SetLabel(LabelType* arr, const size_t pos,  const char* labelName, 
                                                                      const int   labelAdress);
-static inline LabelType* GetLabel(LabelType* arr, const size_t size, const char* labelName);
-static inline int GetLabelAdress(const int *byteCodePtr, const int* byteCodeBegin);
+static        LabelType* GetLabel(LabelType* arr, const size_t size, const char* labelName);
+static inline int CalcJumpAdress(const int *byteCodePtr, const int* byteCodeBegin);
 static inline bool IsLabel(const char* labelName);
-
 //HAVE TO BE LABLE ON INPUT
 static inline size_t GetLabelLength(const char* labelName);
+
+CommandsErrors BuildByteCodeArr(TextType* asmCode, int** byteCodeStorage, size_t* byteCodeSize);
+static CommandsErrors ParseCommand(char* command, TextType* asmCode, const size_t line,
+                                        int* byteCode, int* byteCodePtr, int** byteCodeEndPtr,
+                                        LabelType* labels, const size_t maxNumberOfLabels);
+static CommandsErrors BuildLabelsArray(TextType* asmCode, 
+                                       int* byteCode, int* byteCodePtr,
+                                       LabelType* labels, const size_t maxNumberOfLabels);
+static CommandsErrors BuildJumps(TextType* asmCode, 
+                                 int* byteCode, int* byteCodePtr,
+                                 LabelType* labels, const size_t maxNumberOfLabels,
+                                 int** byteCodeEndPtr);
 
 static const VersionType AssemblyVersion = 1;
 
@@ -38,14 +49,7 @@ static inline void PrintByteCode(int* byteCode, const size_t length, FILE* outSt
 
 //------------Consts------------------
 
-#define DEF_CMD(name, num, instructionPrintingCode, ...)                                    \
-    if (strcasecmp(command, #name) == 0)                                                    \
-    {                                                                                       \
-        instructionPrintingCode;                                                            \
-    }                                                                                       \
-    else 
-
-CommandsErrors Assembly(FILE* inStream, FILE* outStream)
+CommandsErrors Assembl(FILE* inStream, FILE* outStream)
 {
     assert(inStream);
     assert(outStream);
@@ -53,75 +57,47 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
     TextType asmCode = {};
     TextTypeCtor(&asmCode, inStream);
 
-    int* byteCode    = (int*) calloc(asmCode.textSz + AddedInfoSizeByteCode, sizeof(*byteCode));
-    int* byteCodePtr = byteCode;
+    int *byteCode        = nullptr;
+    size_t byteCodeSize  = 0;
+    BuildByteCodeArr(&asmCode, &byteCode, &byteCodeSize);
 
-    byteCodePtr = AddSpecificationInfo(byteCodePtr, asmCode.textSz, AddedInfoSizeByteCode);
-
-    static const size_t maxCommandLength  = 32;
-    static char command[maxCommandLength] = "";
-
-    static const size_t maxNumberOfLabels      = 10;
-    static LabelType labels[maxNumberOfLabels] = {{}};
-    LabelsArrayCtor(labels, maxNumberOfLabels);
-
-    const size_t numberOfCompilations = 2;
-          size_t labelSetPosition     = 0;
-
-    for (size_t compilationId = 0; compilationId < numberOfCompilations; ++compilationId)
-    {
-        for (size_t line = 0; line < asmCode.linesCnt; ++line)
-        {
-            sscanf(asmCode.lines[line].line, "%s", command);
-
-            if (compilationId == 0 && IsLabel(command))
-            {
-                assert(labelSetPosition < maxNumberOfLabels);
-
-                SetLabel(labels, labelSetPosition, command, GetLabelAdress(byteCodePtr, byteCode));
-
-                ++labelSetPosition;
-                continue;
-            }
-
-            //TODO: какой-то костыль, мб создать функцию firstCompilation(), secondCompilation(), а то как-то супер не оч
-            if (IsLabel(command)) continue;
-
-            #include "../Common/Commands.h"
-
-            /* else */
-            {
-                printf("Invalid command: %s\n", command);
-                TextTypeDestructor(&asmCode);
-
-                free(byteCode);
-                byteCode    = nullptr;
-                byteCodePtr = nullptr;
-
-                COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_STRING);
-                                   return CommandsErrors::INVALID_COMMAND_STRING;
-            }
-        }
-
-        //TODO: запихать в функцию какую-нибудь потому что вот это плохо выглядит(
-        if (compilationId != numberOfCompilations - 1)
-            byteCodePtr = byteCode + AddedInfoSizeByteCode;
-    }
-
-    assert(byteCodePtr - byteCode > 0);
-
-    PrintByteCode(byteCode, (size_t)(byteCodePtr - byteCode), outStream);
+    PrintByteCode(byteCode, byteCodeSize, outStream);
 
     TextTypeDestructor(&asmCode);
 
     free(byteCode);
-    byteCode    = nullptr;
-    byteCodePtr = nullptr;
+    byteCode = nullptr;
 
     return CommandsErrors::NO_ERR;
 }
 
-#undef DEF_CMD
+CommandsErrors BuildByteCodeArr(TextType* asmCode, int** byteCodeStorage, size_t* byteCodeSize)
+{
+    int* byteCode    = (int*) calloc(asmCode->textSz + AddedInfoSizeByteCode, sizeof(*byteCode));
+    int* byteCodePtr = byteCode;
+
+    byteCodePtr = AddSpecificationInfo(byteCodePtr, asmCode->textSz, AddedInfoSizeByteCode);
+
+    static const size_t maxNumberOfLabels      = 10;
+    static LabelType labels[maxNumberOfLabels] = {};
+    LabelsArrayCtor(labels, maxNumberOfLabels);    
+
+    CommandsErrors error = BuildLabelsArray(asmCode, byteCode, byteCodePtr, labels, maxNumberOfLabels);
+    error = BuildJumps(asmCode, byteCode, byteCodePtr, labels, maxNumberOfLabels, &byteCodePtr);
+
+    if (error != CommandsErrors::NO_ERR)
+    {
+        free(byteCode);
+        COMMANDS_ERRORS_LOG_ERROR(error);
+                           return error;
+    }
+
+    assert(byteCodePtr - byteCode > 0);
+    *byteCodeStorage = byteCode;
+    *byteCodeSize    = (size_t)(byteCodePtr - byteCode);
+
+    return CommandsErrors::NO_ERR;
+}
 
 static inline int CopyIntArgument(const char* source, int* target, int** targetEndPtr)
 {
@@ -271,7 +247,7 @@ static inline LabelType* GetLabel(LabelType* arr, const size_t size, const char*
     return nullptr;
 }
 
-static inline int GetLabelAdress(const int *byteCodePtr, const int* byteCodeBegin)
+static inline int CalcJumpAdress(const int *byteCodePtr, const int* byteCodeBegin)
 {
     assert(byteCodePtr);
     assert(byteCodeBegin);
@@ -306,3 +282,116 @@ static inline size_t GetLabelLength(const char* labelName)
 
     return (size_t) (strchr(labelName, ':') - labelName - 1);
 }
+
+static CommandsErrors BuildLabelsArray(TextType* asmCode, 
+                                       int* byteCode, int* byteCodePtr,
+                                       LabelType* labels, const size_t maxNumberOfLabels)
+{
+    assert(asmCode);
+    assert(byteCode);
+    assert(byteCodePtr);
+
+    static const size_t maxCommandLength  = 32;
+    static char command[maxCommandLength] = "";
+
+    size_t labelSetPosition = 0;
+    for (size_t line = 0; line < asmCode->linesCnt; ++line)
+    {
+        sscanf(asmCode->lines[line].line, "%s", command);
+
+        if (IsLabel(command))
+        {
+            assert(labelSetPosition < maxNumberOfLabels);
+
+            SetLabel(labels, labelSetPosition, command, CalcJumpAdress(byteCodePtr, byteCode));
+
+            ++labelSetPosition;
+            continue;
+        }
+
+        CommandsErrors error = ParseCommand(command, asmCode, line, 
+                                            byteCode, byteCodePtr, &byteCodePtr,
+                                            labels, maxNumberOfLabels);
+        
+        if (error != CommandsErrors::NO_ERR)
+        {
+            COMMANDS_ERRORS_LOG_ERROR(error);
+                               return error;   
+        }
+    }
+    
+    return CommandsErrors::NO_ERR;
+}
+
+static CommandsErrors BuildJumps(TextType* asmCode, 
+                                 int* byteCode, int* byteCodePtr,
+                                 LabelType* labels, const size_t maxNumberOfLabels,
+                                 int** byteCodeEndPtr)
+{
+    assert(asmCode);
+    assert(byteCode);
+    assert(byteCodePtr);
+    assert(byteCodeEndPtr);
+
+    static const size_t maxCommandLength  = 32;
+    static char command[maxCommandLength] = "";
+
+    for (size_t line = 0; line < asmCode->linesCnt; ++line)
+    {
+        sscanf(asmCode->lines[line].line, "%s", command);
+
+        if (IsLabel(command))
+            continue;
+
+        CommandsErrors error = ParseCommand(command, asmCode, line, 
+                                                byteCode, byteCodePtr, &byteCodePtr,
+                                                labels, maxNumberOfLabels);
+
+        if (error != CommandsErrors::NO_ERR)
+        {
+            COMMANDS_ERRORS_LOG_ERROR(error);       
+                               return error;   
+        }
+    }
+
+    *byteCodeEndPtr = byteCodePtr;
+    return CommandsErrors::NO_ERR;     
+}
+
+#define DEF_CMD(name, num, instructionPrintingCode, ...)                                    \
+    if (strcasecmp(command, #name) == 0)                                                    \
+    {                                                                                       \
+        instructionPrintingCode;                                                            \
+    }                                                                                       \
+    else 
+
+static CommandsErrors ParseCommand(char* command, TextType* asmCode, const size_t line,
+                                           int* byteCode, int* byteCodePtr, int** byteCodeEndPtr,
+                                           LabelType* labels, const size_t maxNumberOfLabels)
+{
+    assert(command);
+    assert(asmCode);
+    assert(byteCode);
+    assert(byteCodePtr);
+
+    #include "../Common/Commands.h"
+
+    /* else */
+    {
+        printf("Invalid command: %s\n", command);
+        TextTypeDestructor(asmCode);
+
+        free(byteCode);
+        byteCode        = nullptr;
+        byteCodePtr     = nullptr;
+        *byteCodeEndPtr = nullptr;
+
+        COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_STRING);
+                            return CommandsErrors::INVALID_COMMAND_STRING;
+    }
+
+    *byteCodeEndPtr = byteCodePtr;
+    return CommandsErrors::NO_ERR;
+}
+
+#undef DEF_CMD

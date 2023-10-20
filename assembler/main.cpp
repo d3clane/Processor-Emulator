@@ -22,8 +22,13 @@ int main(const int argc, const char* argv[])
     else
         out = fopen("out.bin", "wb");
 
-    Assembly(in, out);
+    CommandsErrors error = Assembl(in, out);
 
+    if (error != CommandsErrors::NO_ERR)
+        fprintf(stderr, "Error occurred while assembling.\n");
+    
     fclose(in);
     fclose(out);
+
+    return (int)error;
 }
