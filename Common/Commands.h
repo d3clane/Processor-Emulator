@@ -702,3 +702,5 @@ static inline SpuErrors CommandJne(SpuType* spu)
 #undef PRINT_JMP_ASM
 #undef COMMAND_JUMP_IF
 //-----------------------
+
+#undef PRINT_COMMAND_ID_ASM
