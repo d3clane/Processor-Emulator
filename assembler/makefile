@@ -45,8 +45,6 @@ docs:
 
 clean:
 	rm -rf *.o
-	rm -rf ../*.o
-	rm -rf ../../*.o
 
 buildDirs:
 	mkdir $(OBJECTDIR)

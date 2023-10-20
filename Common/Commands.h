@@ -92,11 +92,11 @@ static SpuErrors CommandPush(SpuType* spu)
 
 //---------------------
 
-#define NO_ARGS_INSTRUCTIONS_PRINT_ASM(num) *byteCodePtr++ = num;
+#define PRINT_COMMAND_ID_ASM(num) *byteCodePtr++ = num;
 
 DEF_CMD(IN, 2, 
 {
-    NO_ARGS_INSTRUCTIONS_PRINT_ASM(2);
+    PRINT_COMMAND_ID_ASM(2);
 },
 CommandArguments::NO_ARGS_ID,
 {
@@ -134,17 +134,11 @@ static SpuErrors CommandIn(SpuType* spu)
 
 DEF_CMD(POP, 3, 
 {
-    char registerName[RegisterStringLength + 1] = "";
+    PRINT_COMMAND_ID_ASM(3);
+    int copyResult = CopyRegisterArgument(asmCode.lines[line].line + strlen(POP), byteCodePtr, &byteCodePtr);
 
-    int scanfResult = sscanf(asmCode.lines[line].line + strlen(POP), "%s", registerName);
-    int registerId  = GetRegisterId(registerName);
-
-    *byteCodePtr++ = (int)Commands::POP_ID;
-
-    if (scanfResult == 0 || registerId == -1)
+    if (copyResult == 0)
         COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_SYNTAX);
-    else
-        *byteCodePtr++ = registerId;
 },
 CommandArguments::ONE_REGISTER_ID,
 {
@@ -185,7 +179,7 @@ static SpuErrors CommandPop(SpuType* spu)
 
 DEF_CMD(MUL, 4,  
 {
-    NO_ARGS_INSTRUCTIONS_PRINT_ASM(4);
+    PRINT_COMMAND_ID_ASM(4);
 },
 CommandArguments::NO_ARGS_ID,
 {
@@ -199,7 +193,7 @@ static inline SpuErrors CommandMul(int inFirstValue, int inSecondValue, int* out
     VALUES_CHECK(inFirstValue, inSecondValue);
 
     *outValue = inFirstValue * inSecondValue / CalculatingPrecision;
-    
+
     return SpuErrors::NO_ERR;
 }
 )
@@ -209,7 +203,7 @@ static inline SpuErrors CommandMul(int inFirstValue, int inSecondValue, int* out
 
 DEF_CMD(ADD, 5,  
 {
-    NO_ARGS_INSTRUCTIONS_PRINT_ASM(5);
+    PRINT_COMMAND_ID_ASM(5);
 },
 CommandArguments::NO_ARGS_ID,
 {
@@ -223,7 +217,7 @@ static inline SpuErrors CommandAdd(int inFirstValue, int inSecondValue, int* out
     VALUES_CHECK(inFirstValue, inSecondValue);
 
     *outValue = inFirstValue + inSecondValue;
-    
+
     return SpuErrors::NO_ERR;
 }
 )
@@ -232,7 +226,7 @@ static inline SpuErrors CommandAdd(int inFirstValue, int inSecondValue, int* out
 
 DEF_CMD(DIV, 6,  
 {
-    NO_ARGS_INSTRUCTIONS_PRINT_ASM(6);
+    PRINT_COMMAND_ID_ASM(6);
 },
 CommandArguments::NO_ARGS_ID,
 {
@@ -262,7 +256,7 @@ static inline SpuErrors CommandDiv(int inFirstValue, int inSecondValue, int* out
 
 DEF_CMD(SUB, 7,  
 {
-    NO_ARGS_INSTRUCTIONS_PRINT_ASM(7);
+    PRINT_COMMAND_ID_ASM(7);
 },
 CommandArguments::NO_ARGS_ID,
 {
@@ -276,7 +270,7 @@ static inline SpuErrors CommandSub(int inFirstValue, int inSecondValue, int* out
     VALUES_CHECK(inFirstValue, inSecondValue);
 
     *outValue = inFirstValue - inSecondValue;
-    
+
     return SpuErrors::NO_ERR;
 }
 )
@@ -285,7 +279,7 @@ static inline SpuErrors CommandSub(int inFirstValue, int inSecondValue, int* out
 
 DEF_CMD(SIN, 8,  
 {
-    NO_ARGS_INSTRUCTIONS_PRINT_ASM(8);
+    PRINT_COMMAND_ID_ASM(8);
 },
 CommandArguments::NO_ARGS_ID,
 {
@@ -308,7 +302,7 @@ static inline SpuErrors CommandSin(int inValue, int* outValue)
 
 DEF_CMD(COS,  9,  
 {
-    NO_ARGS_INSTRUCTIONS_PRINT_ASM(9);
+    PRINT_COMMAND_ID_ASM(9);
 },
 CommandArguments::NO_ARGS_ID,
 {
@@ -331,7 +325,7 @@ static inline SpuErrors CommandCos(int inValue, int* outValue)
 
 DEF_CMD(TAN, 10,  
 {
-    NO_ARGS_INSTRUCTIONS_PRINT_ASM(10);
+    PRINT_COMMAND_ID_ASM(10);
 },
 CommandArguments::NO_ARGS_ID,
 {
@@ -354,7 +348,7 @@ static inline SpuErrors CommandTan(int inValue, int* outValue)
 
 DEF_CMD(COT, 11,  
 {
-    NO_ARGS_INSTRUCTIONS_PRINT_ASM(11);
+    PRINT_COMMAND_ID_ASM(11);
 },
 CommandArguments::NO_ARGS_ID,
 {
@@ -377,7 +371,7 @@ static inline SpuErrors CommandCot(int inValue, int* outValue)
 
 DEF_CMD(SQRT, 12,  
 {
-    NO_ARGS_INSTRUCTIONS_PRINT_ASM(12);
+    PRINT_COMMAND_ID_ASM(12);
 },
 CommandArguments::NO_ARGS_ID,
 {
@@ -400,7 +394,7 @@ static inline SpuErrors CommandSqrt(int inValue, int* outValue)
 
 DEF_CMD(POW2, 13,  
 {
-    NO_ARGS_INSTRUCTIONS_PRINT_ASM(13);
+    PRINT_COMMAND_ID_ASM(13);
 },
 CommandArguments::NO_ARGS_ID,
 {
@@ -423,7 +417,7 @@ static inline SpuErrors CommandPow2(int inValue, int* outValue)
 
 DEF_CMD(MEOW , 14,  
 {
-    NO_ARGS_INSTRUCTIONS_PRINT_ASM(14);
+    PRINT_COMMAND_ID_ASM(14);
 },
 CommandArguments::NO_ARGS_ID,
 {
@@ -442,7 +436,7 @@ static inline SpuErrors CommandMeow()
 
 DEF_CMD(BARK , 15,  
 {
-    NO_ARGS_INSTRUCTIONS_PRINT_ASM(15);
+    PRINT_COMMAND_ID_ASM(15);
 },
 CommandArguments::NO_ARGS_ID,
 {
@@ -461,7 +455,7 @@ static inline SpuErrors CommandBark()
 
 DEF_CMD(SLEEP, 16,  
 {
-    NO_ARGS_INSTRUCTIONS_PRINT_ASM(16);
+    PRINT_COMMAND_ID_ASM(16);
 },
 CommandArguments::NO_ARGS_ID,
 {
@@ -480,7 +474,7 @@ static inline SpuErrors CommandSleep()
 
 DEF_CMD(BOTAY, 17,  
 {
-    NO_ARGS_INSTRUCTIONS_PRINT_ASM(17);
+    PRINT_COMMAND_ID_ASM(17);
 },
 CommandArguments::NO_ARGS_ID,
 {
@@ -499,7 +493,7 @@ static inline SpuErrors CommandBotay()
 
 DEF_CMD(OUT, 18,  
 {
-    NO_ARGS_INSTRUCTIONS_PRINT_ASM(18);
+    PRINT_COMMAND_ID_ASM(18);
 },
 CommandArguments::NO_ARGS_ID,
 {
@@ -522,7 +516,7 @@ static inline SpuErrors CommandOut(int inValue, int* outValue)
 
 DEF_CMD(HLT, 19,  
 {
-    NO_ARGS_INSTRUCTIONS_PRINT_ASM(19);
+    PRINT_COMMAND_ID_ASM(19);
 },
 CommandArguments::NO_ARGS_ID,
 {
@@ -532,6 +526,37 @@ CommandArguments::NO_ARGS_ID,
 static inline void CommandHlt()
 {
     return;
+}
+)
+
+DEF_CMD(JMP, 20,
+{
+    PRINT_COMMAND_ID_ASM(20);
+    int copyResult = CopyIntArgument(asmCode.lines[line].line + strlen(JMP), byteCodePtr, &byteCodePtr);
+
+    if (copyResult == 0)
+        COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_SYNTAX);
+},
+CommandArguments::ONE_INT_VALUE_ID,
+{
+    SpuError = CommandJmp(&spu);
+},
+
+static inline SpuErrors CommandJmp(SpuType* spu)
+{
+    assert(spu);
+
+    SPU_CHECK(spu);
+
+    int valueToJump = *spu->byteCodeArrayReadPtr++;
+
+    assert(valueToJump > 0);
+
+    spu->byteCodeArrayReadPtr = spu->byteCodeArray + valueToJump;
+
+    SPU_CHECK(spu);
+
+    return SpuErrors::NO_ERR;    
 }
 )
 

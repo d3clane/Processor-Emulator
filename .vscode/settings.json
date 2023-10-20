@@ -18,6 +18,17 @@
         "typeinfo": "cpp",
         "chrono": "cpp",
         "system_error": "cpp",
-        "ratio": "cpp"
+        "ratio": "cpp",
+        "__node_handle": "cpp",
+        "atomic": "cpp",
+        "__memory": "cpp",
+        "limits": "cpp",
+        "locale": "cpp",
+        "optional": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp",
+        "charconv": "cpp",
+        "functional": "cpp",
+        "utility": "cpp"
     }
 }

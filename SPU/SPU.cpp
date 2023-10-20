@@ -298,7 +298,6 @@ static SpuErrors CallBinaryCommand(SpuErrors (*Command)(int, int, int*), SpuType
     STACK_PUSH(spu, commandResult);
 
     SPU_CHECK(spu);
-
     return error;
 }
 

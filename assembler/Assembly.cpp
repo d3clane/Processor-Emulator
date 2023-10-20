@@ -8,7 +8,8 @@
 static const VersionType AssemblyVersion = 1;
 
 static inline int GetRegisterId(const char* reg);
-static inline int* CopyArgument(const char* source, int* target);
+static inline int CopyIntArgument(const char* source, int* target, int** targetEndPtr);
+static inline int CopyRegisterArgument(const char* source, int* target, int** targetEndPtr);
 static inline int* AddSpecificationInfo(int* byteCode, const size_t asmFileSize, 
                                                        const size_t addedInfoSizeByteCode);
 
@@ -49,6 +50,7 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
 
         /* else */
         {
+            printf("Invalid command: %s\n", command);
             TextTypeDestructor(&asmCode);
 
             free(byteCode);
@@ -75,16 +77,41 @@ CommandsErrors Assembly(FILE* inStream, FILE* outStream)
 
 #undef DEF_CMD
 
-static inline int* CopyArgument(const char* source, int* target)
+static inline int CopyIntArgument(const char* source, int* target, int** targetEndPtr)
 {
     assert(source);
     assert(target);
+    assert(targetEndPtr);
 
-    int scannedChars = 0;
+    int scanfResult = sscanf(source, "%d", target);
 
-    sscanf(source, "%d%n", target, &scannedChars);
+    *targetEndPtr = target + 1;
 
-    return target + scannedChars;
+    return scanfResult;
+}
+
+static inline int CopyRegisterArgument(const char* source, int* target, int** targetEndPtr)
+{
+    assert(source);
+    assert(target);
+    assert(targetEndPtr);
+
+    static char registerName[RegisterStringLength + 1] = "";
+
+    int scanfResult = sscanf(source, "%s", registerName);
+    int registerId  = GetRegisterId(registerName);
+
+    if (registerId == -1)
+    {
+        COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_SYNTAX);
+        return 0;
+    }
+
+    *target++ = registerId;
+
+    *targetEndPtr = target;
+
+    return scanfResult;
 }
 
 static inline void PrintByteCode(int* byteCode, const size_t length, FILE* outStream)
