@@ -519,7 +519,7 @@ StackErrorsType StackRealloc(StackType* stk, bool increase)
         stk->data = GetAfterFirstCanaryAdr(stk);
     )
 
-    if (increase) 
+    if (increase)
         FillArray(stk->data + stk->size, stk->data + stk->capacity, POISON);
 
     // -------Putting canary at the end-----------
@@ -528,6 +528,12 @@ StackErrorsType StackRealloc(StackType* stk, bool increase)
         CanaryCtor(GetSecondCanaryAdr(stk));
     )
 
+    ON_HASH
+    (
+        UpdateDataHash(stk);
+        UpdateStructHash(stk);
+    )
+    
     STACK_CHECK(stk);
 
     return 0;
