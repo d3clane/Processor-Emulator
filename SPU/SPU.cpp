@@ -67,10 +67,10 @@ static inline SpuErrors SkipAddedInfo(SpuType* spu);
 
 //-----------Other functions-------------
 
-typedef SpuErrors (CommandFuncType)(int value);
-
-static SpuErrors CallBinaryCommand(SpuErrors (*Command)(int, int, int*), SpuType* spu);
-static SpuErrors CallUnaryCommand (SpuErrors (*Command)(int,      int*), SpuType* spu);
+typedef SpuErrors BinaryCommandFunc(int, int, int*);
+typedef SpuErrors  UnaryCommandFunc(int,      int*);
+static SpuErrors CallBinaryCommand(BinaryCommandFunc* Command, SpuType* spu);
+static SpuErrors CallUnaryCommand (UnaryCommandFunc*  Command, SpuType* spu);
 
 static SpuErrors GetStackLastValue(StackType* stack, int* value);
 static SpuErrors GetTwoLastValuesFromStack(StackType* stack, int* firstVal, int* secondVal);
@@ -243,7 +243,7 @@ SpuErrors Processing(FILE* inStream)
 #undef DEF_CMD
 #undef SPU_CHECK_WITH_DTOR
 
-static SpuErrors CallUnaryCommand (SpuErrors (*Command)(int, int*), SpuType* spu)
+static SpuErrors CallUnaryCommand (UnaryCommandFunc* Command, SpuType* spu)
 {
     assert(Command);
     assert(spu);
@@ -272,7 +272,7 @@ static SpuErrors CallUnaryCommand (SpuErrors (*Command)(int, int*), SpuType* spu
     return error;
 }
 
-static SpuErrors CallBinaryCommand(SpuErrors (*Command)(int, int, int*), SpuType* spu)
+static SpuErrors CallBinaryCommand(BinaryCommandFunc* Command, SpuType* spu)
 {
     assert(Command);
     assert(spu);
