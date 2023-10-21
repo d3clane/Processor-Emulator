@@ -20,16 +20,9 @@ static inline size_t CopyArguments(CommandArguments argId, const int* source,
                                    char* target, char** targetEndPtr);
 static inline char* SprintfRegisterName(char* targPtr, const size_t registerId);
 
-static inline CommandsErrors ParseCommands(char* asmCode, char* asmCodePtr, 
-                                           int* byteCode, int* byteCodePtr, 
-                                           char** asmCodeEndPtr, int** byteCodeEndPtr,
-                                           const size_t disasmFileSize);
-
 //-----Disassembly version--------------
 
 static const uint32_t DisassemblyVersion = 1;
-
-//------Auto generating define----------
 
 CommandsErrors Disassembl(FILE* inStream, FILE* outStream)
 {
@@ -61,10 +54,9 @@ CommandsErrors Disassembl(FILE* inStream, FILE* outStream)
     char* asmCode    = (char*) calloc(disasmFileSize, sizeof(char));
     char* asmCodePtr = asmCode;
     
-    error = ParseCommands(asmCode, asmCodePtr, 
-                          byteCode, byteCodePtr, 
-                          &asmCodePtr, &byteCodePtr, 
-                          disasmFileSize);
+    error = BuildAsmCode(asmCode, byteCodePtr, 
+                         &asmCodePtr, &byteCodePtr, 
+                         disasmFileSize);
 
 
     assert(asmCodePtr - asmCode < disasmFileSize);
@@ -207,11 +199,16 @@ static inline CommandsErrors FileVerify(int* byteCode)
         byteCodePtr += CopyArguments(argId, byteCodePtr, asmCodePtr, &asmCodePtr);      \
         break;
 
-static inline CommandsErrors ParseCommands(char* asmCode, char* asmCodePtr, 
-                                           int* byteCode, int* byteCodePtr, 
-                                           char** asmCodeEndPtr, int** byteCodeEndPtr,
-                                           const size_t disasmFileSize)
+CommandsErrors BuildAsmCode(char* asmCode, int* byteCodePtr, 
+                            char** asmCodeEndPtr, int** byteCodeEndPtr,
+                            const size_t disasmFileSize)
 {
+    assert(asmCode);
+    assert(byteCodePtr);
+    assert(asmCodeEndPtr);
+    assert(byteCodeEndPtr);
+
+    char *asmCodePtr = asmCode;
     while (true)
     {
         int command = *byteCodePtr;
