@@ -5,6 +5,6 @@
 
 #include "../Common/Common.h"
 
-CommandsErrors Disassembly(FILE* inStream, FILE* outStream);
+CommandsErrors Disassembl(FILE* inStream, FILE* outStream);
 
 #endif

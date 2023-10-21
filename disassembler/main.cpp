@@ -21,5 +21,10 @@ int main(const int argc, const char* argv[])
     else
         out = fopen("out.txt", "w");
 
-    Disassembly(in, out);
+    CommandsErrors error = Disassembl(in, out);
+
+    fclose(in);
+    fclose(out);
+    
+    return (int)error;
 }

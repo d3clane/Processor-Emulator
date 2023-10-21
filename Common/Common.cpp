@@ -56,6 +56,7 @@ void CommandsErrorsLogError(CommandsErrors error, const char* fileName,
 int* ReadByteCode(FILE* inStream, size_t* byteCodeArrSize)
 {
     assert(inStream);
+
     size_t byteCodeFileSize = GetFileSize(inStream);
 
     *byteCodeArrSize = byteCodeFileSize / sizeof(int) + 1;
