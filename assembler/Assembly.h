@@ -6,7 +6,7 @@
 #include "../Common/Common.h"
 #include "../InputOutput/InputOutput.h"
 
-CommandsErrors BuildByteCodeArr(TextType* asmCode);
+CommandsErrors BuildByteCodeArr(TextType* asmCode, int** byteCodeStorage, size_t* byteCodeSize);
 CommandsErrors Assembl(FILE* inStream, FILE* outStream);
 
 #endif

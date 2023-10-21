@@ -23,7 +23,6 @@ static inline bool IsLabel(const char* labelName);
 //HAVE TO BE LABLE ON INPUT
 static inline size_t GetLabelLength(const char* labelName);
 
-CommandsErrors BuildByteCodeArr(TextType* asmCode, int** byteCodeStorage, size_t* byteCodeSize);
 static CommandsErrors ParseCommand(char* command, TextType* asmCode, const size_t line,
                                         int* byteCode, int* byteCodePtr, int** byteCodeEndPtr,
                                         LabelType* labels, const size_t maxNumberOfLabels);
@@ -280,7 +279,7 @@ static inline size_t GetLabelLength(const char* labelName)
 {
     assert(labelName);
 
-    return (size_t) (strchr(labelName, ':') - labelName - 1);
+    return (size_t)(strchr(labelName, ':') - labelName - 1);
 }
 
 static CommandsErrors BuildLabelsArray(TextType* asmCode, 
@@ -319,7 +318,7 @@ static CommandsErrors BuildLabelsArray(TextType* asmCode,
                                return error;   
         }
     }
-    
+
     return CommandsErrors::NO_ERR;
 }
 
