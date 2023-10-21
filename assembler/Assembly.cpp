@@ -58,9 +58,10 @@ CommandsErrors Assembl(FILE* inStream, FILE* outStream)
 
     int *byteCode        = nullptr;
     size_t byteCodeSize  = 0;
-    BuildByteCodeArr(&asmCode, &byteCode, &byteCodeSize);
+    CommandsErrors error = BuildByteCodeArr(&asmCode, &byteCode, &byteCodeSize);
 
-    PrintByteCode(byteCode, byteCodeSize, outStream);
+    if (error == CommandsErrors::NO_ERR)
+        PrintByteCode(byteCode, byteCodeSize, outStream);
 
     TextTypeDestructor(&asmCode);
 
@@ -96,7 +97,7 @@ CommandsErrors BuildByteCodeArr(TextType* asmCode, int** byteCodeStorage, size_t
     *byteCodeSize    = (size_t)(byteCodePtr - byteCode);
 
     LabelsArrayDtor(labels, maxNumberOfLabels);
-    
+
     return CommandsErrors::NO_ERR;
 }
 
@@ -381,11 +382,6 @@ static CommandsErrors ParseCommand(char* command, TextType* asmCode, const size_
     {
         printf("Invalid command: %s\n", command);
         TextTypeDestructor(asmCode);
-
-        free(byteCode);
-        byteCode        = nullptr;
-        byteCodePtr     = nullptr;
-        *byteCodeEndPtr = nullptr;
 
         COMMANDS_ERRORS_LOG_ERROR(CommandsErrors::INVALID_COMMAND_STRING);
                             return CommandsErrors::INVALID_COMMAND_STRING;
