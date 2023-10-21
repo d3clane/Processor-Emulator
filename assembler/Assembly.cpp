@@ -95,6 +95,8 @@ CommandsErrors BuildByteCodeArr(TextType* asmCode, int** byteCodeStorage, size_t
     *byteCodeStorage = byteCode;
     *byteCodeSize    = (size_t)(byteCodePtr - byteCode);
 
+    LabelsArrayDtor(labels, maxNumberOfLabels);
+    
     return CommandsErrors::NO_ERR;
 }
 
