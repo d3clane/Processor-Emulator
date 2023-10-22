@@ -8,17 +8,6 @@
 #include "../InputOutput/InputOutput.h"
 #include "../Common/Log.h"
 
-struct SpuType
-{
-    StackType stack;
-
-    int* byteCodeArray;
-    int* byteCodeArrayReadPtr;
-    size_t byteCodeArraySize;
-
-    int registers[NumberOfRegisters];
-};
-
 const int CalculatingPrecision = 1e2;
 
 //--------------SpuType functions--------------
@@ -28,14 +17,12 @@ static SpuErrors SpuDtor(SpuType* spu);
 
 #define SPU_DUMP(SPU) SpuDump((SPU), __FILE__, __func__, __LINE__)
 static SpuErrors SpuDump(SpuType* spu, const char* fileName,
-                                                   const char* funcName,
-                                                   const int line);
+                                       const char* funcName,
+                                       const int line);
 
 static SpuErrors SpuVerify(SpuType* spu);
 
 //--------------Spu commands--------------
-
-SpuErrors ExecuteByteCode(SpuType* spu);
 
 static SpuErrors CommandPushRegister(SpuType* spu);
 static SpuErrors CommandPush        (SpuType* spu);
@@ -184,7 +171,7 @@ SpuErrors ExecuteByteCode(FILE* inStream)
 
     SpuType spu = {};
     SpuErrors spuError = SpuCtor(&spu, inStream);
-    spuError = SkipAddedInfo(&spu);
+              spuError = SkipAddedInfo(&spu);
 
     if (spuError != SpuErrors::NO_ERR)
     {
@@ -332,7 +319,7 @@ static SpuErrors GetTwoLastValuesFromStack(StackType* stack, int* firstVal, int*
     assert(stack);
     assert(firstVal);
     assert(secondVal);
-    
+
     StackErrorsType stackError = StackPop(stack, secondVal);
     stackError = StackPop(stack, firstVal);
     

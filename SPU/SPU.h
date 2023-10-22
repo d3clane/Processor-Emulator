@@ -25,6 +25,17 @@ enum class SpuErrors
     INVALID_REGISTER,
 };
 
+struct SpuType
+{
+    StackType stack;
+
+    int* byteCodeArray;
+    int* byteCodeArrayReadPtr;
+    size_t byteCodeArraySize;
+
+    int registers[NumberOfRegisters];
+};
+
 #define SPU_ERRORS_LOG_ERROR(ERROR) SpuErrorsLogError((ERROR), __FILE__, \
                                                                __func__, \
                                                                __LINE__)
@@ -33,6 +44,7 @@ void SpuErrorsLogError(SpuErrors error, const char* fileName,
                                         const char* funcName,
                                         const int line);
 
+SpuErrors ExecuteByteCode(SpuType* spu);
 SpuErrors ExecuteByteCode(FILE* inStream = stdin);
 
 #endif
