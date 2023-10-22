@@ -13,7 +13,10 @@ int main(const int argc, const char* const argv[])
     else
         in = fopen("in.bin", "rb");
 
-    Processing(in);
+    //READ
+    SpuErrors error = ExecuteByteCode(in);
 
     fclose(in);
+
+    return (int)error;
 }

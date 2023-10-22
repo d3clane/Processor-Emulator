@@ -32,7 +32,7 @@ DEF_CMD(PUSH_REGISTER, 0,
 },
 CommandArguments::ONE_REGISTER_ID,
 {
-    SpuError = CommandPushRegister(&spu);
+    spuError = CommandPushRegister(spu);
 },
 
 static SpuErrors CommandPushRegister(SpuType* spu)
@@ -67,7 +67,7 @@ DEF_CMD(PUSH, 1,
 },
 CommandArguments::ONE_INT_VALUE_ID,
 {
-    SpuError = CommandPush(&spu);
+    spuError = CommandPush(spu);
 },
 
 static SpuErrors CommandPush(SpuType* spu)
@@ -99,7 +99,7 @@ DEF_CMD(IN, 2,
 },
 CommandArguments::NO_ARGS_ID,
 {
-    SpuError = CommandIn(&spu);
+    spuError = CommandIn(spu);
 },
 
 static SpuErrors CommandIn(SpuType* spu)
@@ -141,7 +141,7 @@ DEF_CMD(POP, 3,
 },
 CommandArguments::ONE_REGISTER_ID,
 {
-    SpuError = CommandPop(&spu);
+    spuError = CommandPop(spu);
 },
 
 static SpuErrors CommandPop(SpuType* spu)
@@ -182,7 +182,7 @@ DEF_CMD(MUL, 4,
 },
 CommandArguments::NO_ARGS_ID,
 {
-    SpuError = CallBinaryCommand(CommandMul, &spu);
+    spuError = CallBinaryCommand(CommandMul, spu);
 },
 
 static inline SpuErrors CommandMul(int inFirstValue, int inSecondValue, int* outValue)
@@ -206,7 +206,7 @@ DEF_CMD(ADD, 5,
 },
 CommandArguments::NO_ARGS_ID,
 {
-    SpuError = CallBinaryCommand(CommandAdd, &spu);
+    spuError = CallBinaryCommand(CommandAdd, spu);
 },
 
 static inline SpuErrors CommandAdd(int inFirstValue, int inSecondValue, int* outValue)
@@ -229,7 +229,7 @@ DEF_CMD(DIV, 6,
 },
 CommandArguments::NO_ARGS_ID,
 {
-    SpuError = CallBinaryCommand(CommandDiv, &spu);
+    spuError = CallBinaryCommand(CommandDiv, spu);
 },
 
 static inline SpuErrors CommandDiv(int inFirstValue, int inSecondValue, int* outValue)
@@ -259,7 +259,7 @@ DEF_CMD(SUB, 7,
 },
 CommandArguments::NO_ARGS_ID,
 {
-    SpuError = CallBinaryCommand(CommandSub, &spu);
+    spuError = CallBinaryCommand(CommandSub, spu);
 },
 
 static inline SpuErrors CommandSub(int inFirstValue, int inSecondValue, int* outValue)
@@ -282,7 +282,7 @@ DEF_CMD(SIN, 8,
 },
 CommandArguments::NO_ARGS_ID,
 {
-    SpuError = CallUnaryCommand(CommandSin, &spu);
+    spuError = CallUnaryCommand(CommandSin, spu);
 },
 
 static inline SpuErrors CommandSin(int inValue, int* outValue)
@@ -305,7 +305,7 @@ DEF_CMD(COS,  9,
 },
 CommandArguments::NO_ARGS_ID,
 {
-    SpuError = CallUnaryCommand(CommandCos, &spu);
+    spuError = CallUnaryCommand(CommandCos, spu);
 },
 
 static inline SpuErrors CommandCos(int inValue, int* outValue)
@@ -328,7 +328,7 @@ DEF_CMD(TAN, 10,
 },
 CommandArguments::NO_ARGS_ID,
 {
-    SpuError = CallUnaryCommand(CommandTan, &spu);
+    spuError = CallUnaryCommand(CommandTan, spu);
 },
 
 static inline SpuErrors CommandTan(int inValue, int* outValue)
@@ -351,7 +351,7 @@ DEF_CMD(COT, 11,
 },
 CommandArguments::NO_ARGS_ID,
 {
-    SpuError = CallUnaryCommand(CommandCot, &spu);
+    spuError = CallUnaryCommand(CommandCot, spu);
 },
 
 static inline SpuErrors CommandCot(int inValue, int* outValue)
@@ -374,7 +374,7 @@ DEF_CMD(SQRT, 12,
 },
 CommandArguments::NO_ARGS_ID,
 {
-    SpuError = CallUnaryCommand(CommandSqrt, &spu);
+    spuError = CallUnaryCommand(CommandSqrt, spu);
 },
 
 static inline SpuErrors CommandSqrt(int inValue, int* outValue)
@@ -397,7 +397,7 @@ DEF_CMD(POW2, 13,
 },
 CommandArguments::NO_ARGS_ID,
 {
-    SpuError = CallUnaryCommand(CommandPow2, &spu);
+    spuError = CallUnaryCommand(CommandPow2, spu);
 },
 
 static inline SpuErrors CommandPow2(int inValue, int* outValue)
@@ -420,7 +420,7 @@ DEF_CMD(MEOW , 14,
 },
 CommandArguments::NO_ARGS_ID,
 {
-    SpuError = CommandMeow();
+    spuError = CommandMeow();
 },
 
 static inline SpuErrors CommandMeow()
@@ -439,7 +439,7 @@ DEF_CMD(BARK , 15,
 },
 CommandArguments::NO_ARGS_ID,
 {
-    SpuError = CommandBark();
+    spuError = CommandBark();
 },
 
 static inline SpuErrors CommandBark()
@@ -458,7 +458,7 @@ DEF_CMD(SLEEP, 16,
 },
 CommandArguments::NO_ARGS_ID,
 {
-    SpuError = CommandSleep();
+    spuError = CommandSleep();
 },
 
 static inline SpuErrors CommandSleep()
@@ -477,7 +477,7 @@ DEF_CMD(BOTAY, 17,
 },
 CommandArguments::NO_ARGS_ID,
 {
-    SpuError = CommandBotay();
+    spuError = CommandBotay();
 },
 
 static inline SpuErrors CommandBotay()
@@ -496,7 +496,7 @@ DEF_CMD(OUT, 18,
 },
 CommandArguments::NO_ARGS_ID,
 {
-    SpuError = CallUnaryCommand(CommandOut, &spu);
+    spuError = CallUnaryCommand(CommandOut, spu);
 },
 
 static inline SpuErrors CommandOut(int inValue, int* outValue)
@@ -556,7 +556,7 @@ DEF_CMD(JMP, 20,
 },
 CommandArguments::ONE_INT_VALUE_ID,
 {
-    SpuError = CommandJmp(&spu);
+    spuError = CommandJmp(spu);
 },
 
 static inline SpuErrors CommandJmp(SpuType* spu)
@@ -594,6 +594,8 @@ static inline SpuErrors CommandJmp(SpuType* spu)
     {\
         error = CommandJmp(spu);\
     }\
+    else\
+        spu->byteCodeArrayReadPtr++;\
 \
     return error; \
 }
@@ -604,7 +606,7 @@ DEF_CMD(JB, 21,
 },
 CommandArguments::ONE_INT_VALUE_ID,
 {
-    SpuError = CommandJb(&spu);
+    spuError = CommandJb(spu);
 },
 
 static inline SpuErrors CommandJb(SpuType* spu)
@@ -621,7 +623,7 @@ DEF_CMD(JA, 22,
 },
 CommandArguments::ONE_INT_VALUE_ID,
 {
-    SpuError = CommandJa(&spu);
+    spuError = CommandJa(spu);
 },
 
 static inline SpuErrors CommandJa(SpuType* spu)
@@ -638,7 +640,7 @@ DEF_CMD(JAE, 23,
 },
 CommandArguments::ONE_INT_VALUE_ID,
 {
-    SpuError = CommandJae(&spu);
+    spuError = CommandJae(spu);
 },
 
 static inline SpuErrors CommandJae(SpuType* spu)
@@ -655,7 +657,7 @@ DEF_CMD(JBE, 24,
 },
 CommandArguments::ONE_INT_VALUE_ID,
 {
-    SpuError = CommandJbe(&spu);
+    spuError = CommandJbe(spu);
 },
 
 static inline SpuErrors CommandJbe(SpuType* spu)
@@ -672,7 +674,7 @@ DEF_CMD(JE, 25,
 },
 CommandArguments::ONE_INT_VALUE_ID,
 {
-    SpuError = CommandJe(&spu);
+    spuError = CommandJe(spu);
 },
 
 static inline SpuErrors CommandJe(SpuType* spu)
@@ -689,7 +691,7 @@ DEF_CMD(JNE, 26,
 },
 CommandArguments::ONE_INT_VALUE_ID,
 {
-    SpuError = CommandJne(&spu);
+    spuError = CommandJne(spu);
 },
 
 static inline SpuErrors CommandJne(SpuType* spu)

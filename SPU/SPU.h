@@ -33,6 +33,6 @@ void SpuErrorsLogError(SpuErrors error, const char* fileName,
                                         const char* funcName,
                                         const int line);
 
-SpuErrors Processing(FILE* inStream = stdin);
+SpuErrors ExecuteByteCode(FILE* inStream = stdin);
 
 #endif

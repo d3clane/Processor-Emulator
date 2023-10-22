@@ -22,7 +22,7 @@ HEADERS  = ../Common/Colors.h ../Common/Errors.h ../Stack/Stack.h ../Common/Log.
 			SPU.h \
 			../InputOutput/InputOutput.h \
 			../InputOutput/StringFuncs.h \
-			../Common/Common.h \
+			../Common/Common.h ../Common/Commands.h
 
 FILESCPP =  ../Common/Errors.cpp ../Stack/Stack.cpp ../Common/Log.cpp \
 			../Stack/ArrayFuncs.cpp ../Stack/HashFuncs.cpp	      \

@@ -35,6 +35,7 @@ static SpuErrors SpuVerify(SpuType* spu);
 
 //--------------Spu commands--------------
 
+SpuErrors ExecuteByteCode(SpuType* spu);
 
 static SpuErrors CommandPushRegister(SpuType* spu);
 static SpuErrors CommandPush        (SpuType* spu);
@@ -69,6 +70,7 @@ static inline SpuErrors SkipAddedInfo(SpuType* spu);
 
 typedef SpuErrors BinaryCommandFunc(int, int, int*);
 typedef SpuErrors  UnaryCommandFunc(int,      int*);
+
 static SpuErrors CallBinaryCommand(BinaryCommandFunc* Command, SpuType* spu);
 static SpuErrors CallUnaryCommand (UnaryCommandFunc*  Command, SpuType* spu);
 
@@ -135,13 +137,13 @@ do                                                                              
     #define SPU_CHECK(SPU)                      \
     do                                                      \
     {                                                       \
-        SpuErrors spuError = SpuVerify((SPU));  \
+        SpuErrors spuErr = SpuVerify((SPU));  \
                                                             \
-        if (spuError != SpuErrors::NO_ERR)                  \
+        if (spuErr != SpuErrors::NO_ERR)                  \
         {                                                   \
             SPU_DUMP((SPU));                    \
-            SPU_ERRORS_LOG_ERROR(spuError);                 \
-            return spuError;                                \
+            SPU_ERRORS_LOG_ERROR(spuErr);                 \
+            return spuErr;                                \
         }                                                   \
     } while (0)
     
@@ -151,9 +153,10 @@ do                                                                              
 
 #endif
 
+//-------_Creating functions--------------
+
 #define DEF_CMD(name, num, asmCode, argId, switchCode, functionCode, ...)  functionCode
 
-//-------_Creating functions--------------
 #include "../Common/Commands.h"
 
 #undef DEF_CMD
@@ -175,41 +178,50 @@ do                                                              \
     }                                                           \
 } while (0)
 
+SpuErrors ExecuteByteCode(FILE* inStream)
+{
+    assert(inStream);
+
+    SpuType spu = {};
+    SpuErrors spuError = SpuCtor(&spu, inStream);
+    spuError = SkipAddedInfo(&spu);
+
+    if (spuError != SpuErrors::NO_ERR)
+    {
+        SPU_ERRORS_LOG_ERROR(spuError);
+
+        SpuDtor(&spu);
+
+        return spuError;
+    }
+
+    spuError = ExecuteByteCode(&spu);
+
+    SpuDtor(&spu);
+
+    IF_ERR_RETURN(spuError);
+
+    return SpuErrors::NO_ERR;
+}
+
+#undef SPU_CHECK_WITH_DTOR
+
 #define DEF_CMD(name, num, asmCode, argId, code, ...)  \
     case Commands::name ##_ID:                         \
         code;                                          \
         break;
 
-SpuErrors Processing(FILE* inStream)
+SpuErrors ExecuteByteCode(SpuType* spu)
 {
-    assert(inStream);
-
-    SpuType spu = {};
-    SpuCtor(&spu, inStream);
-
-    SpuErrors addedInfoError = FileVerify(&spu);
-
-    if (addedInfoError != SpuErrors::NO_ERR)
-    {
-        SPU_ERRORS_LOG_ERROR(addedInfoError);
-
-        SpuDtor(&spu);
-
-        return addedInfoError;
-    }
-
-    SkipAddedInfo(&spu);
-    
-    SpuErrors SpuError = SpuErrors::NO_ERR;
-
-    SPU_CHECK_WITH_DTOR(spu);
+    assert(spu);
 
     int command = -1;
+    SpuErrors spuError = SpuErrors::NO_ERR;
     while (true)
     {
         bool quitCycle = false;
-        
-        command = *spu.byteCodeArrayReadPtr++;
+
+        command = *spu->byteCodeArrayReadPtr++;
 
         switch((Commands) command)
         {
@@ -217,31 +229,26 @@ SpuErrors Processing(FILE* inStream)
         #include "../Common/Commands.h"
 
         default:
-            SpuError = SpuErrors::INVALID_COMMAND;
-            SPU_ERRORS_LOG_ERROR(SpuError);
+            spuError = SpuErrors::INVALID_COMMAND;
+            SPU_ERRORS_LOG_ERROR(spuError);
 
             quitCycle = true;
             break;
         }
 
-        if (SpuError != SpuErrors::NO_ERR)
+        if (spuError != SpuErrors::NO_ERR)
             break;
 
-        SPU_CHECK_WITH_DTOR(spu);
+        SPU_CHECK(spu);
 
         if (quitCycle)
             break;
     }
 
-    SpuDtor(&spu);
-
-    IF_ERR_RETURN(SpuError);
-
     return SpuErrors::NO_ERR;
 }
 
 #undef DEF_CMD
-#undef SPU_CHECK_WITH_DTOR
 
 static SpuErrors CallUnaryCommand (UnaryCommandFunc* Command, SpuType* spu)
 {
@@ -286,7 +293,7 @@ static SpuErrors CallBinaryCommand(BinaryCommandFunc* Command, SpuType* spu)
 
     IF_ERR_RETURN(error);
 
-    if (!IsValidValue(&firstValue) || !IsValidValue(&secondValue))
+    if (!IsValidValues(&firstValue, &secondValue))
     {
         SPU_ERRORS_LOG_ERROR(SpuErrors::VALUES_COULD_NOT_BE_USED_FOR_ARITHMETIC);
                       return SpuErrors::VALUES_COULD_NOT_BE_USED_FOR_ARITHMETIC;        
@@ -325,7 +332,7 @@ static SpuErrors GetTwoLastValuesFromStack(StackType* stack, int* firstVal, int*
     assert(stack);
     assert(firstVal);
     assert(secondVal);
-
+    
     StackErrorsType stackError = StackPop(stack, secondVal);
     stackError = StackPop(stack, firstVal);
     
@@ -350,11 +357,17 @@ static SpuErrors SpuCtor(SpuType* spu, FILE* inStream)
     assert(spu);
     assert(inStream);
 
-
     spu->byteCodeArray        = ReadByteCode(inStream, &spu->byteCodeArraySize);
     spu->byteCodeArrayReadPtr = spu->byteCodeArray;
 
     StackErrorsType stackError = StackCtor(&spu->stack);
+    SpuErrors error = FileVerify(spu);
+
+    if (error != SpuErrors::NO_ERR)
+    {
+        SPU_ERRORS_LOG_ERROR(error);
+                      return error;
+    }
 
     if (stackError)
     {
