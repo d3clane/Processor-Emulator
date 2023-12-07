@@ -3,6 +3,9 @@
 
 #include <stdio.h>
 
+#include "../Stack/Stack.h"
+#include "../Common/Common.h"
+
 enum class SpuErrors
 {
     NO_ERR,
@@ -44,7 +47,7 @@ void SpuErrorsLogError(SpuErrors error, const char* fileName,
                                         const char* funcName,
                                         const int line);
 
-SpuErrors ExecuteByteCode(SpuType* spu);
 SpuErrors ExecuteByteCode(FILE* inStream = stdin);
+SpuErrors ExecuteByteCode(SpuType* spu);
 
 #endif

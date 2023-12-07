@@ -32,6 +32,14 @@ static const SignatureType Signature = 'COCK';
 
 static const size_t AddedInfoSizeByteCode = 3;
 
+//TODO: 
+struct AddedInfoType
+{
+    int disasmFileSize;
+    int signature;
+    int version;
+};
+
 enum AddedInfoPositions
 {
     DISASM_FILE_SIZE_INFO_POSITION = 0,

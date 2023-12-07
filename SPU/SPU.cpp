@@ -2,9 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "../Common/Common.h"
 #include "SPU.h"
-#include "../Stack/Stack.h"
 #include "../InputOutput/InputOutput.h"
 #include "../Common/Log.h"
 
@@ -82,7 +80,7 @@ do                                                                              
 
 static const VersionType SpuVersion = 1; 
 
-//--------functions realization------
+//--------functions implementations------
 
 /// @brief push and return error
 #define STACK_PUSH(SPU, VALUE_TO_PUSH)                           \
@@ -169,6 +167,7 @@ SpuErrors ExecuteByteCode(FILE* inStream)
 {
     assert(inStream);
 
+    //----------Read byte code----------
     SpuType spu = {};
     SpuErrors spuError = SpuCtor(&spu, inStream);
               spuError = SkipAddedInfo(&spu);
@@ -182,6 +181,7 @@ SpuErrors ExecuteByteCode(FILE* inStream)
         return spuError;
     }
 
+    //----------Execute-------------
     spuError = ExecuteByteCode(&spu);
 
     SpuDtor(&spu);

@@ -23,6 +23,8 @@ static inline bool IsLabel(const char* labelName);
 //HAVE TO BE LABLE ON INPUT
 static inline size_t GetLabelLength(const char* labelName);
 
+static inline void PrintLabelToByteCode(LabelType* label, int* byteCodePtr, int* byteCodeEndPtr);
+
 static CommandsErrors ParseCommand(char* command, TextType* asmCode, const size_t line,
                                         int* byteCode, int* byteCodePtr, int** byteCodeEndPtr,
                                         LabelType* labels, const size_t maxNumberOfLabels);
@@ -154,9 +156,15 @@ static inline int* AddSpecificationInfo(int* byteCode, const size_t asmFileSize,
 {
     assert(byteCode);
 
+    //TODO: 
+    AddedInfoType addedInfo = 
+    {.disasmFileSize = asmFileSize, 
+     .signature = Signature, 
+     .version = AssemblyVersion};
+    
     byteCode[DISASM_FILE_SIZE_INFO_POSITION] = asmFileSize;
-    byteCode[SIGNATURE_INFO_POSITION]      = Signature;
-    byteCode[VERSION_INFO_POSITION]        = AssemblyVersion;
+    byteCode[SIGNATURE_INFO_POSITION]        = Signature;
+    byteCode[VERSION_INFO_POSITION]          = AssemblyVersion;
 
     return byteCode + addedInfoSizeByteCode;
 }
@@ -221,7 +229,6 @@ static inline LabelType* SetLabel(LabelType* arr, const size_t pos,  const char*
     assert(arr);
     assert(labelName);
 
-
     if (!IsLabel(labelName))
     {
         return nullptr;
@@ -283,6 +290,17 @@ static inline size_t GetLabelLength(const char* labelName)
     assert(labelName);
 
     return (size_t)(strchr(labelName, ':') - labelName - 1);
+}
+
+static inline void PrintLabelToByteCode(LabelType* label, int* byteCodePtr, int* byteCodeEndPtr)
+{
+    assert(byteCodeEndPtr);
+    assert(byteCodePtr);
+
+    if (label == nullptr)
+        *byteCodePtr++ = -1;
+    else
+        *byteCodePtr++ = label->jmpAdress;
 }
 
 static CommandsErrors BuildLabelsArray(TextType* asmCode, 

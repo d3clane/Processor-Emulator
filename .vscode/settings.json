@@ -29,6 +29,7 @@
         "type_traits": "cpp",
         "charconv": "cpp",
         "functional": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "__locale": "cpp"
     }
 }

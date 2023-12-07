@@ -1,3 +1,5 @@
+//TODO: make function
+
 #define PUSH_PRINT_ASM  \
 {   \
     int value = -1;     \
@@ -24,6 +26,9 @@
             *byteCodePtr++ = registerId; \
         } \
     }   \
+
+    // 0 2
+    // 1 0
 }
 
 DEF_CMD(PUSH_REGISTER, 0,
@@ -144,6 +149,7 @@ CommandArguments::ONE_REGISTER_ID,
     spuError = CommandPop(spu);
 },
 
+//  
 static SpuErrors CommandPop(SpuType* spu)
 {
     assert(spu);
@@ -528,31 +534,29 @@ static inline void CommandHlt()
 }
 )
 
-#define PRINT_JMP_ASM(name, num) \
-{   \
-    PRINT_COMMAND_ID_ASM(num); \
-\
-    int copyResult = CopyIntArgument(asmCode->lines[line].line + strlen(#name), byteCodePtr, &byteCodePtr); \
-\
-    if (copyResult == 0) \
-    { \
-        static const char maxLabelLength      = 32;\
-        static char labelName[maxLabelLength] = "";\
-\
-        sscanf(asmCode->lines[line].line + strlen(#name),  "%s", labelName);\
-\
-        LabelType* tmpLabel = GetLabel(labels, maxNumberOfLabels, labelName);\
-\
-        if (tmpLabel == nullptr)\
-            *byteCodePtr++ = -1;\
-        else\
-            *byteCodePtr++ = tmpLabel->jmpAdress;\
-    }\
+#define MAKE_JMP_ASM(name, num)                                                     \
+{                                                                                   \
+    PRINT_COMMAND_ID_ASM(num);                                                      \
+                                                                                    \
+    int copyResult = CopyIntArgument(asmCode->lines[line].line + strlen(#name),     \
+                                     byteCodePtr, &byteCodePtr);                    \
+                                                                                    \
+    if (copyResult == 0)                                                            \
+    {                                                                               \
+        const char maxLabelLength      = 32;                                        \
+        char labelName[maxLabelLength] = "";                                        \
+                                                                                    \
+        sscanf(asmCode->lines[line].line + strlen(#name), "%s", labelName);         \
+                                                                                    \
+        LabelType* labelInArray = GetLabel(labels, maxNumberOfLabels, labelName);   \
+                                                                                    \
+        PrintLabelToByteCode(labelInArray, byteCodePtr, &byteCodePtr);              \
+    }                                                                               \
 }
 
 DEF_CMD(JMP, 20,
 {
-    PRINT_JMP_ASM(JMP, 20);
+    MAKE_JMP_ASM(JMP, 20);
 },
 CommandArguments::ONE_INT_VALUE_ID,
 {
@@ -602,7 +606,7 @@ static inline SpuErrors CommandJmp(SpuType* spu)
 
 DEF_CMD(JB, 21, 
 {
-    PRINT_JMP_ASM(JB, 21);
+    MAKE_JMP_ASM(JB, 21);
 },
 CommandArguments::ONE_INT_VALUE_ID,
 {
@@ -619,7 +623,7 @@ static inline SpuErrors CommandJb(SpuType* spu)
 
 DEF_CMD(JA, 22, 
 {
-    PRINT_JMP_ASM(JA, 22);
+    MAKE_JMP_ASM(JA, 22);
 },
 CommandArguments::ONE_INT_VALUE_ID,
 {
@@ -636,7 +640,7 @@ static inline SpuErrors CommandJa(SpuType* spu)
 
 DEF_CMD(JAE, 23, 
 {
-    PRINT_JMP_ASM(JAE, 23);
+    MAKE_JMP_ASM(JAE, 23);
 },
 CommandArguments::ONE_INT_VALUE_ID,
 {
@@ -653,7 +657,7 @@ static inline SpuErrors CommandJae(SpuType* spu)
 
 DEF_CMD(JBE, 24, 
 {
-    PRINT_JMP_ASM(JBE, 24);
+    MAKE_JMP_ASM(JBE, 24);
 },
 CommandArguments::ONE_INT_VALUE_ID,
 {
@@ -670,7 +674,7 @@ static inline SpuErrors CommandJbe(SpuType* spu)
 
 DEF_CMD(JE, 25, 
 {
-    PRINT_JMP_ASM(JE, 25);
+    MAKE_JMP_ASM(JE, 25);
 },
 CommandArguments::ONE_INT_VALUE_ID,
 {
@@ -687,7 +691,7 @@ static inline SpuErrors CommandJe(SpuType* spu)
 
 DEF_CMD(JNE, 26, 
 {
-    PRINT_JMP_ASM(JNE, 26);
+    MAKE_JMP_ASM(JNE, 26);
 },
 CommandArguments::ONE_INT_VALUE_ID,
 {
@@ -700,7 +704,7 @@ static inline SpuErrors CommandJne(SpuType* spu)
 }
 )
 
-#undef PRINT_JMP_ASM
+#undef MAKE_JMP_ASM
 #undef COMMAND_JUMP_IF
 //-----------------------
 
