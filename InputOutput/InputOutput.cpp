@@ -3,12 +3,11 @@
 #include <stdio.h>
 #include <sys/stat.h>
 
-#include "../Common/Colors.h"
+#include "Common/Colors.h"
 #include "InputOutput.h"
 #include "StringFuncs.h"
 
 //------------------------------------------------------------------------------------------------
-
 
 int TextTypeCtor(TextType* text, const char* const fileName)
 {

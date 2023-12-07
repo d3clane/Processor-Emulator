@@ -4,7 +4,7 @@
 
 #include "ArrayFuncs.h"
 #include "Stack.h"
-#include "../Common/Log.h"
+#include "Common/Log.h"
 
 //----------static functions------------
 
@@ -487,7 +487,7 @@ StackErrorsType StackRealloc(StackType* stk, bool increase)
     else          stk->capacity >>= 1;
 
     if (!increase) 
-        FillArray(stk->data + stk->capacity, stk->data + stk->size, POISON);
+        FillArray(stk->data + stk->size, stk->data + stk->capacity, POISON);
 
     //--------Moves data to the first canary-------
     ON_CANARY

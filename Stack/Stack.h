@@ -6,7 +6,7 @@
 
 #include <assert.h>
 
-#include "../Common/Errors.h"
+#include "Common/Errors.h"
 #include "Types.h"
 #include "HashFuncs.h"
 
@@ -65,7 +65,7 @@ struct StackType
         HashType structHash;    ///< hash of all elements in struct.
     )
 
-    size_t capacity;     ///< REAL size of the data at this moment (calloced more than need at this moment).
+    size_t capacity;     ///< REAL size of the data at this moment 
 
     ON_CANARY
     (

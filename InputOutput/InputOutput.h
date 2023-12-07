@@ -6,7 +6,7 @@
 
 #include <stdio.h>
 
-#include "../Common/Errors.h"
+#include "Common/Errors.h"
 
 /// @brief Contains info about line (her ending and length)
 struct LineType

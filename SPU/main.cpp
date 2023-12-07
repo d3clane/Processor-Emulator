@@ -1,10 +1,11 @@
 #include <stdio.h>
 
-#include "../Common/Log.h"
+#include "Common/Log.h"
 #include "SPU.h"
 
 int main(const int argc, const char* const argv[])
 {
+    setbuf(stdout, nullptr);
     LogOpen(argv[0]);
 
     FILE* in  = nullptr;

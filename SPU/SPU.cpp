@@ -2,9 +2,11 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "Common/Common.h"
 #include "SPU.h"
-#include "../InputOutput/InputOutput.h"
-#include "../Common/Log.h"
+#include "Stack/Stack.h"
+#include "InputOutput/InputOutput.h"
+#include "Common/Log.h"
 
 const int CalculatingPrecision = 1e2;
 
@@ -20,38 +22,9 @@ static SpuErrors SpuDump(SpuType* spu, const char* fileName,
 
 static SpuErrors SpuVerify(SpuType* spu);
 
-//--------------Spu commands--------------
-
-static SpuErrors CommandPushRegister(SpuType* spu);
-static SpuErrors CommandPush        (SpuType* spu);
-static SpuErrors CommandIn          (SpuType* spu);
-static SpuErrors CommandPop         (SpuType* spu);
-
-static inline SpuErrors CommandDiv(int inFirstValue, int inSecondValue, int* outValue);
-static inline SpuErrors CommandMul(int inFirstValue, int inSecondValue, int* outValue);
-static inline SpuErrors CommandSub(int inFirstValue, int inSecondValue, int* outValue);
-static inline SpuErrors CommandAdd(int inFirstValue, int inSecondValue, int* outValue);
-
-static inline SpuErrors CommandSin (int inValue, int* outValue);
-static inline SpuErrors CommandCos (int inValue, int* outValue);
-static inline SpuErrors CommandTan (int inValue, int* outValue);
-static inline SpuErrors CommandCot (int inValue, int* outValue);
-static inline SpuErrors CommandPow2 (int inValue, int* outValue);
-static inline SpuErrors CommandSqrt(int inValue, int* outValue);
-
-static SpuErrors CommandMeow ();
-static SpuErrors CommandBark ();
-static SpuErrors CommandSleep();
-static SpuErrors CommandBotay();
-
-static inline SpuErrors CommandOut(int inValue, int* outValue);
-
-//----------Added info functions-------
-
-static inline SpuErrors FileVerify(SpuType* spu);
-static inline SpuErrors SkipAddedInfo(SpuType* spu);
-
 //-----------Other functions-------------
+
+static int* ReadByteCode(FILE* inStream);
 
 typedef SpuErrors BinaryCommandFunc(int, int, int*);
 typedef SpuErrors  UnaryCommandFunc(int,      int*);
@@ -63,6 +36,8 @@ static SpuErrors GetStackLastValue(StackType* stack, int* value);
 static SpuErrors GetTwoLastValuesFromStack(StackType* stack, int* firstVal, int* secondVal);
 
 static inline bool IsValidValues(const int* firstVal, const int* secondVal);
+
+static int* GetArgument(SpuType* spu, int command);
 
 //-----------defines------------------
 
@@ -80,7 +55,7 @@ do                                                                              
 
 static const VersionType SpuVersion = 1; 
 
-//--------functions implementations------
+//--------functions realization------
 
 /// @brief push and return error
 #define STACK_PUSH(SPU, VALUE_TO_PUSH)                           \
@@ -119,16 +94,16 @@ do                                                                              
 /// @brief verifies spu and returns
 #ifndef NDEBUG
 
-    #define SPU_CHECK(SPU)                      \
+    #define SPU_CHECK(SPU)                                  \
     do                                                      \
     {                                                       \
-        SpuErrors spuErr = SpuVerify((SPU));  \
+        SpuErrors spuErr = SpuVerify((SPU));                \
                                                             \
-        if (spuErr != SpuErrors::NO_ERR)                  \
+        if (spuErr != SpuErrors::NO_ERR)                    \
         {                                                   \
-            SPU_DUMP((SPU));                    \
-            SPU_ERRORS_LOG_ERROR(spuErr);                 \
-            return spuErr;                                \
+            SPU_DUMP((SPU));                                \
+            SPU_ERRORS_LOG_ERROR(spuErr);                   \
+            return spuErr;                                  \
         }                                                   \
     } while (0)
     
@@ -140,9 +115,9 @@ do                                                                              
 
 //-------_Creating functions--------------
 
-#define DEF_CMD(name, num, asmCode, argId, switchCode, functionCode, ...)  functionCode
+#define DEF_CMD(NAME, v2, v3, functionCode, ...) functionCode
 
-#include "../Common/Commands.h"
+#include "Common/Commands.h"
 
 #undef DEF_CMD
 
@@ -167,10 +142,8 @@ SpuErrors ExecuteByteCode(FILE* inStream)
 {
     assert(inStream);
 
-    //----------Read byte code----------
     SpuType spu = {};
     SpuErrors spuError = SpuCtor(&spu, inStream);
-              spuError = SkipAddedInfo(&spu);
 
     if (spuError != SpuErrors::NO_ERR)
     {
@@ -181,7 +154,6 @@ SpuErrors ExecuteByteCode(FILE* inStream)
         return spuError;
     }
 
-    //----------Execute-------------
     spuError = ExecuteByteCode(&spu);
 
     SpuDtor(&spu);
@@ -193,11 +165,6 @@ SpuErrors ExecuteByteCode(FILE* inStream)
 
 #undef SPU_CHECK_WITH_DTOR
 
-#define DEF_CMD(name, num, asmCode, argId, code, ...)  \
-    case Commands::name ##_ID:                         \
-        code;                                          \
-        break;
-
 SpuErrors ExecuteByteCode(SpuType* spu)
 {
     assert(spu);
@@ -206,36 +173,99 @@ SpuErrors ExecuteByteCode(SpuType* spu)
     SpuErrors spuError = SpuErrors::NO_ERR;
     while (true)
     {
-        bool quitCycle = false;
+        command = spu->byteCode[spu->ip];
+        spu->ip++;
 
-        command = *spu->byteCodeArrayReadPtr++;
-
-        switch((Commands) command)
-        {
-
-        #include "../Common/Commands.h"
-
-        default:
-            spuError = SpuErrors::INVALID_COMMAND;
-            SPU_ERRORS_LOG_ERROR(spuError);
-
-            quitCycle = true;
+        if (command == (int)Commands::HLT)
             break;
+
+        //printf("Command id - %d\n", command);
+        #define DEF_CMD(NAME, v1, v2, v3, code, ...)\
+            case Commands::NAME:                    \
+            {                                       \
+                code;                               \
+                break;                              \
+            }
+
+        switch((Commands)(command & ~(ARG_FORMAT_IMM | ARG_FORMAT_RAM | ARG_FORMAT_REG)))
+        {
+            #include "Common/Commands.h"
+
+            default:
+                spuError = SpuErrors::INVALID_COMMAND;
+                SPU_ERRORS_LOG_ERROR(spuError);
+
+                break;
         }
+
+        //printf("(\n");
+
+        #undef DEF_CMD
 
         if (spuError != SpuErrors::NO_ERR)
             break;
-
+        
         SPU_CHECK(spu);
-
-        if (quitCycle)
-            break;
+        //printf("NO_ERR2\n");
     }
 
     return SpuErrors::NO_ERR;
 }
 
-#undef DEF_CMD
+static int* GetArgument(SpuType* spu, int command)
+{
+    static int value = 0;
+    value = 0;
+
+    int* res = nullptr;
+    bool hasArgs = false;
+
+    //printf("HERE1, command - %d, command & - %d\n", command, command & ARG_FORMAT_IMM);
+    if (command & ARG_FORMAT_IMM)
+    {
+        //sprintf("HERE\n");
+        hasArgs = true;
+        res     = nullptr;
+        value   = spu->byteCode[spu->ip];
+
+        //TODO: добавить в commands.h инфу о том, нужно ли домножение тут.
+        if ((command & ~(ARG_FORMAT_IMM | ARG_FORMAT_RAM | ARG_FORMAT_REG)) == (int)Commands::PUSH)
+            value *= CalculatingPrecision;
+
+        spu->ip++;
+    }
+
+    if (command & ARG_FORMAT_REG)
+    {
+        hasArgs = true;
+        assert(spu->byteCode[spu->ip] < NumberOfRegisters);
+
+        res    = &spu->registers[spu->byteCode[spu->ip]];
+        value +=  spu->registers[spu->byteCode[spu->ip]];
+        spu->ip++;
+    }
+
+    if (command & ARG_FORMAT_RAM)
+    {
+        hasArgs = true;
+
+        assert(0 <= value && value < RamSize);
+
+        res   = &spu->ram[value / CalculatingPrecision];
+        value =  spu->ram[value / CalculatingPrecision];
+    }
+
+    if (!hasArgs)
+        return nullptr;
+    //TODO: мб надо что-то добавить в commands.h, чтобы оно это обрабатывало
+    // здесь как будто условие, что что-то достает откуда-то, а это буквально 1 операция у меня
+    if ((command & ~(ARG_FORMAT_IMM | ARG_FORMAT_RAM | ARG_FORMAT_REG)) == (int)Commands::POP)
+        return res;
+    else
+        return &value;
+    
+    return nullptr;
+}
 
 static SpuErrors CallUnaryCommand (UnaryCommandFunc* Command, SpuType* spu)
 {
@@ -320,9 +350,9 @@ static SpuErrors GetTwoLastValuesFromStack(StackType* stack, int* firstVal, int*
     assert(firstVal);
     assert(secondVal);
 
-    StackErrorsType stackError = StackPop(stack, secondVal);
-    stackError = StackPop(stack, firstVal);
-    
+    StackErrorsType stackError  = StackPop(stack, secondVal);
+                    stackError |= StackPop(stack, firstVal);
+
     if (stackError)
     {
         SPU_ERRORS_LOG_ERROR(SpuErrors::STACK_ERR);
@@ -344,11 +374,13 @@ static SpuErrors SpuCtor(SpuType* spu, FILE* inStream)
     assert(spu);
     assert(inStream);
 
-    spu->byteCodeArray        = ReadByteCode(inStream, &spu->byteCodeArraySize);
-    spu->byteCodeArrayReadPtr = spu->byteCodeArray;
+    spu->byteCode = ReadByteCode(inStream);
+    spu->ip       = 0;
 
-    StackErrorsType stackError = StackCtor(&spu->stack);
-    SpuErrors error = FileVerify(spu);
+    StackErrorsType stackError =  StackCtor(&spu->stack);
+                    stackError |= StackCtor(&spu->stackRet);
+
+    SpuErrors error = (stackError ? SpuErrors::STACK_ERR : SpuErrors::NO_ERR);
 
     if (error != SpuErrors::NO_ERR)
     {
@@ -371,11 +403,12 @@ static SpuErrors SpuDtor(SpuType* spu)
 {
     assert(spu);
 
-    free(spu->byteCodeArray);
-    spu->byteCodeArray = spu->byteCodeArrayReadPtr = nullptr;
+    free(spu->byteCode);
+    spu->byteCode = nullptr;
+    spu->ip = 0;
 
-    StackErrorsType stackError = StackDtor(&spu->stack);
-
+    StackErrorsType stackError  = StackDtor(&spu->stack);
+                    stackError |= StackDtor(&spu->stackRet);
     if (stackError)
     {
         SPU_ERRORS_LOG_ERROR(SpuErrors::STACK_ERR);
@@ -395,14 +428,14 @@ static SpuErrors SpuDump(SpuType* spu, const char* fileName,
 
     Log("Spu dump called from file %s, function %s, line %d\n", fileName, funcName, line);
 
-    Log("Bytecode array beginning adress      : %p\n", spu->byteCodeArray);
-    Log("Bytecode array adress pointer to read: %p\n", spu->byteCodeArrayReadPtr);
+    Log("Bytecode array beginning adress      : %p\n", spu->byteCode);
+    Log("Bytecode array adress pointer to read: %p\n", spu->byteCode + spu->ip);
     
-    if (spu->byteCodeArray) 
-        Log("Bytecode array info: %s\n\n", spu->byteCodeArray);
+    if (spu->byteCode) 
+        Log("Bytecode array info: %s\n\n", spu->byteCode);
 
-    if (spu->byteCodeArrayReadPtr) 
-        Log("Bytecode array info from last pointer: \n%s\n\n", spu->byteCodeArrayReadPtr);
+    if (spu->byteCode + spu->ip) 
+        Log("Bytecode array info from last pointer: \n%s\n\n", spu->byteCode + spu->ip);
 
     StackDump(&spu->stack, fileName, funcName, line);
 
@@ -415,19 +448,19 @@ static SpuErrors SpuVerify(SpuType* spu)
 {
     assert(spu);
 
-    if (!spu->byteCodeArray)
+    if (!spu->byteCode)
     {
         SPU_ERRORS_LOG_ERROR(SpuErrors::BYTE_CODE_ARR_IS_NULLPTR);
                       return SpuErrors::BYTE_CODE_ARR_IS_NULLPTR;
     }
 
-    if (!spu->byteCodeArrayReadPtr)
+    if (StackVerify(&spu->stack) != 0)
     {
-        SPU_ERRORS_LOG_ERROR(SpuErrors::BYTE_CODE_ARR_PTR_OUT_OF_RANGE);
-                      return SpuErrors::BYTE_CODE_ARR_PTR_OUT_OF_RANGE;           
+        SPU_ERRORS_LOG_ERROR(SpuErrors::STACK_ERR);
+                      return SpuErrors::STACK_ERR;
     }
 
-    if (StackVerify(&spu->stack) != 0)
+    if (StackVerify(&spu->stackRet) != 0)
     {
         SPU_ERRORS_LOG_ERROR(SpuErrors::STACK_ERR);
                       return SpuErrors::STACK_ERR;
@@ -497,45 +530,18 @@ void SpuErrorsLogError(SpuErrors error, const char* fileName,
     LOG_END();
 }
 
-static inline SpuErrors SkipAddedInfo(SpuType* spu)
+static int* ReadByteCode(FILE* inStream)
 {
-    assert(spu);
+    assert(inStream);
 
-    SPU_CHECK(spu);
+    size_t byteCodeFileSize = GetFileSize(inStream);
 
+    size_t byteCodeArrSize = byteCodeFileSize / sizeof(int) + 1;
+    int* byteCode = (int*) calloc(byteCodeArrSize, sizeof(*byteCode));
 
-    spu->byteCodeArrayReadPtr += AddedInfoSizeByteCode;
+    fread(byteCode, sizeof(*byteCode), byteCodeArrSize, inStream);
 
-    SPU_CHECK(spu);
-
-    return SpuErrors::NO_ERR;
-}
-
-static inline SpuErrors FileVerify(SpuType* spu)
-{
-    assert(spu);
-
-    SPU_CHECK(spu);
-
-    int* byteCodeArrayReadPtr = spu->byteCodeArrayReadPtr;
-
-    SignatureType fileSignature = (SignatureType) byteCodeArrayReadPtr[SIGNATURE_INFO_POSITION];
-
-    if (fileSignature != Signature)
-    {
-        SPU_ERRORS_LOG_ERROR(SpuErrors::INVALID_SIGNATURE);
-                      return SpuErrors::INVALID_SIGNATURE;
-    }
-
-    VersionType fileVersion = (VersionType) byteCodeArrayReadPtr[VERSION_INFO_POSITION];
-    
-    if (fileVersion != SpuVersion)
-    {
-        SPU_ERRORS_LOG_ERROR(SpuErrors::INVALID_VERSION);
-                      return SpuErrors::INVALID_VERSION;
-    }
-
-    return SpuErrors::NO_ERR;
+    return byteCode;    
 }
 
 #undef SPU_CHECK

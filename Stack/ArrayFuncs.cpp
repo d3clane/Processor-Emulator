@@ -9,7 +9,7 @@ void FillArray(ElemType* firstBorder, ElemType* secondBorder, const ElemType val
 {
     assert(firstBorder);
     assert(secondBorder);
-
+    assert(firstBorder < secondBorder);
     if (firstBorder > secondBorder)
         Swap(&firstBorder, &secondBorder, sizeof(firstBorder));
 

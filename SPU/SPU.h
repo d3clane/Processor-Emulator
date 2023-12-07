@@ -3,8 +3,8 @@
 
 #include <stdio.h>
 
-#include "../Stack/Stack.h"
-#include "../Common/Common.h"
+#include "Common/Common.h"
+#include "Stack/Stack.h"
 
 enum class SpuErrors
 {
@@ -31,12 +31,13 @@ enum class SpuErrors
 struct SpuType
 {
     StackType stack;
+    StackType stackRet;
 
-    int* byteCodeArray;
-    int* byteCodeArrayReadPtr;
-    size_t byteCodeArraySize;
+    int* byteCode;
+    size_t ip;
 
     int registers[NumberOfRegisters];
+    int ram[RamSize];
 };
 
 #define SPU_ERRORS_LOG_ERROR(ERROR) SpuErrorsLogError((ERROR), __FILE__, \
@@ -47,7 +48,7 @@ void SpuErrorsLogError(SpuErrors error, const char* fileName,
                                         const char* funcName,
                                         const int line);
 
-SpuErrors ExecuteByteCode(FILE* inStream = stdin);
 SpuErrors ExecuteByteCode(SpuType* spu);
+SpuErrors ExecuteByteCode(FILE* inStream = stdin);
 
-#endif
+#endif // SPU_H

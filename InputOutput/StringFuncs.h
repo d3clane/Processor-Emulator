@@ -4,7 +4,7 @@
 /// @file
 /// @brief Contains functions to work with strings containing text
 
-#include "../InputOutput/InputOutput.h"
+#include "InputOutput/InputOutput.h"
 
 //------------------------------------------------------------------------------------------------
 
