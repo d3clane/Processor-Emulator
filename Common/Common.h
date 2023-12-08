@@ -38,6 +38,11 @@ enum class Commands
     #include "Commands.h"
 };
 
+static inline int GetCommand(int command)
+{
+    return command & ~(ARG_FORMAT_IMM | ARG_FORMAT_REG | ARG_FORMAT_RAM);
+}
+
 #undef DEF_CMD
 
 #endif // COMMON_H

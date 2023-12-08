@@ -187,7 +187,7 @@ SpuErrors ExecuteByteCode(SpuType* spu)
                 break;                              \
             }
 
-        switch((Commands)(command & ~(ARG_FORMAT_IMM | ARG_FORMAT_RAM | ARG_FORMAT_REG)))
+        switch((Commands)(GetCommand(command)))
         {
             #include "Common/Commands.h"
 
@@ -229,7 +229,7 @@ static int* GetArgument(SpuType* spu, int command)
         value   = spu->byteCode[spu->ip];
 
         //TODO: добавить в commands.h инфу о том, нужно ли домножение тут.
-        if ((command & ~(ARG_FORMAT_IMM | ARG_FORMAT_RAM | ARG_FORMAT_REG)) == (int)Commands::PUSH)
+        if (GetCommand(command) == (int)Commands::PUSH || GetCommand(command) == (int)Commands::POP)
             value *= CalculatingPrecision;
 
         spu->ip++;
@@ -259,7 +259,7 @@ static int* GetArgument(SpuType* spu, int command)
         return nullptr;
     //TODO: мб надо что-то добавить в commands.h, чтобы оно это обрабатывало
     // здесь как будто условие, что что-то достает откуда-то, а это буквально 1 операция у меня
-    if ((command & ~(ARG_FORMAT_IMM | ARG_FORMAT_RAM | ARG_FORMAT_REG)) == (int)Commands::POP)
+    if (GetCommand(command) == (int)Commands::POP)
         return res;
     else
         return &value;
