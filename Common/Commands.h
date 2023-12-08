@@ -409,3 +409,20 @@ static SpuErrors CommandIn(SpuType* spu)
     spuError = CommandIn(spu);
     //printf("K1\n");
 })
+
+DEF_CMD(OUTC, 24, false, 
+static SpuErrors CommandOutc(int inValue, int* outValue)
+{
+    assert(outValue);
+
+    VALUE_CHECK(inValue);
+
+    printf("%c", (char)(inValue / CalculatingPrecision));
+
+    *outValue = inValue;
+
+    return SpuErrors::NO_ERR;
+},
+{
+    spuError = CallUnaryCommand(CommandOutc, spu);
+})
