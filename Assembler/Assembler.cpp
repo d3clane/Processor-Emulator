@@ -37,7 +37,7 @@ static inline void LabelsArrayDtor(LabelTypeArr* arr);
 
 static AssemblerErrors LabelsArrayBuild(LabelTypeArr* labelsArr, const char* inCode, 
                                                                         int* outCode);
-static AssemblerErrors AsseemblerParseCommand(const char* command, const size_t maxCommandLength,
+static AssemblerErrors AssemblerParseCommand(const char* command, const size_t maxCommandLength,
                                               const char* inCode,        size_t* inCodePos,
                                               int* outCode,              size_t* outCodePos,
                                               const LabelTypeArr* labelsArr);
@@ -135,7 +135,7 @@ static AssemblerErrors CommandsParse(const char* inCode, int* outCode, size_t* o
         if (IsLabel(command))
             continue;
 
-        err = AsseemblerParseCommand(command, maxCommandLength, inCode,  &inPos, 
+        err = AssemblerParseCommand(command, maxCommandLength, inCode,  &inPos, 
                                      outCode, &outPos, labelsArr);
     }
 
@@ -174,14 +174,14 @@ static AssemblerErrors LabelsArrayBuild(LabelTypeArr* labelsArr, const char* inC
             continue;
         }
 
-        err = AsseemblerParseCommand(command, maxCommandLength, inCode,  &inPos, 
+        err = AssemblerParseCommand(command, maxCommandLength, inCode,  &inPos, 
                                      outCode, &outPos, labelsArr);
     }
 
     return err;
 }
 
-static AssemblerErrors AsseemblerParseCommand(const char* command, const size_t maxCommandLength,
+static AssemblerErrors AssemblerParseCommand(const char* command, const size_t maxCommandLength,
                                               const char* inCode,        size_t* inCodePos,
                                               int* outCode,              size_t* outCodePos,
                                               const LabelTypeArr* labelsArr)

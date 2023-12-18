@@ -1,6 +1,5 @@
 //DEF_CMD(NAME, ENUM_ID, USE_LABELS, SPU_CODE, SWITH_CASE_SPU_CALL,)
 
-
 DEF_CMD(PUSH, 0, false,
 static SpuErrors CommandPush(SpuType* spu, int command)
 {
@@ -208,7 +207,7 @@ static inline SpuErrors CommandOut(int inValue, int* outValue)
 
     VALUE_CHECK(inValue);
 
-    printf("Equation result: " "%lg" "\n", 1.0 * inValue / CalculatingPrecision);
+    printf("%lg\n", 1.0 * inValue / CalculatingPrecision);
 
     *outValue = inValue;
 

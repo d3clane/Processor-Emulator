@@ -220,7 +220,6 @@ static int* GetArgument(SpuType* spu, int command)
     int* res = nullptr;
     bool hasArgs = false;
 
-    //printf("HERE1, command - %d, command & - %d\n", command, command & ARG_FORMAT_IMM);
     if (command & ARG_FORMAT_IMM)
     {
         //sprintf("HERE\n");
@@ -249,7 +248,7 @@ static int* GetArgument(SpuType* spu, int command)
     {
         hasArgs = true;
 
-        assert(0 <= value && value < RamSize);
+        assert(0 <= value && value / CalculatingPrecision < RamSize);
 
         res   = &spu->ram[value / CalculatingPrecision];
         value =  spu->ram[value / CalculatingPrecision];
