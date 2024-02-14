@@ -361,7 +361,11 @@ static inline SpuErrors CommandRet(SpuType* spu)
 
     int retAdr = -1;
 
+    assert(!StackIsEmpty(&spu->stackRet));
+
     SpuErrors error = GetStackLastValue(&spu->stackRet, &retAdr);
+
+    //printf("ret adr - %d\n", retAdr);
 
     assert(retAdr >= 0);
 

@@ -128,6 +128,13 @@ static AssemblerErrors CommandsParse(const char* inCode, int* outCode, size_t* o
 
     while (inCode[inPos])
     {
+        inPos = SkipSymbolsWhileStatement(inCode + inPos, isspace) - inCode;
+        if (inCode[inPos] == '@')
+        {
+            inPos = SkipSymbolsUntilStopChar(inCode + inPos, '\n') - inCode;
+            continue;
+        }
+
         int shift = 0;
         sscanf(inCode + inPos, "%s%n", command, &shift);
         inPos += shift;
@@ -163,6 +170,14 @@ static AssemblerErrors LabelsArrayBuild(LabelTypeArr* labelsArr, const char* inC
 
     while (inCode[inPos])
     {
+        inPos = SkipSymbolsWhileStatement(inCode + inPos, isspace) - inCode;
+
+        if (inCode[inPos] == '@')
+        {
+            inPos = SkipSymbolsUntilStopChar(inCode + inPos, '\n') - inCode;
+            continue;
+        }
+
         int shift = 0;
         sscanf(inCode + inPos, "%s%n", command, &shift);
         inPos += shift;
@@ -170,7 +185,7 @@ static AssemblerErrors LabelsArrayBuild(LabelTypeArr* labelsArr, const char* inC
         if (IsLabel(command))
         {
             LabelType* tmp = AddLabel(labelsArr, command, outPos);
-            printf("NEW LABEL, name - %s, adr - %d\n", tmp->labelName, tmp->jmpAdress);
+            //printf("NEW LABEL, name - %s, adr - %d\n", tmp->labelName, tmp->jmpAdress);
             continue;
         }
 
@@ -209,6 +224,7 @@ static AssemblerErrors AssemblerParseCommand(const char* command, const size_t m
 
     /* else */
     {
+        printf("Command name - %s\n", command);
         assert(false);
         return AssemblerErrors::SYNTAX_ERR;
     }
@@ -341,7 +357,7 @@ static AssemblerErrors AssemblerParseCommandWithoutLabels
         ++inPos;
     }
 
-    printf("Command - %s, id - %d\n", command, commandId);
+    //printf("Command - %s, id - %d\n", command, commandId);
     outCode[outPos++] = commandId;
 
     if (hasValue)
