@@ -20,7 +20,7 @@ typedef int SignatureType;
 typedef int VersionType;
 
 #pragma GCC diagnostic ignored "-Wmultichar"
-static const SignatureType Signature = 'COCK';
+static const SignatureType Signature = 'DUDE';
 #pragma GCC diagnostic warning "-Wmultichar"
 
 static const int ARG_FORMAT_IMM = 0x20;

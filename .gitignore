@@ -1,6 +1,6 @@
 .DS_STORE
 build/
 .vscode/
-*.txt
 *.log.html
 *.o
+*.txt
