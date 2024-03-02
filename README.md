@@ -60,10 +60,10 @@ The solution is to create one file with all instructions data and update it inst
 
 These solutions are pretty the same because preprocessor language is also a language and could be used for generating code.
 
-Now as we sorted out our problem, let's move on to the implementation. I have created file [Common/Commands.h](Common/Commands.h) in which for every instruction I use define "DEF_CMD(NAME, ENUM_ID, USE_LABELS, SPU_CODE, SWITCH_CASE_SPU_CALL, ...)" (there could be more arguments). In this file I have defined code that some parts of the main code will use in the future. For example, for generating if/else construction in parsing commands that contains labels I have done this:
+Now as we sorted out our problem, let's move on to the implementation. I have created file [Common/Commands.h](Common/Commands.h) in which for every instruction I use define "DEF_CMD(NAME, ENUM_ID, USE_LABELS, SPU_CODE, SWITCH_CASE_SPU_CALL, ...)" (there could be more arguments). In this file I have defined code that some parts of the main code will use in the future. For example, for generating if/else construct when parsing commands that contains labels I have done this:
 
 ![generate labels](https://github.com/d3clane/Processor-Emulator/blob/main/ReadmeAssets/imgs/AutoGeneration.png)
 
-In this case I compare only instructions that use labels (it is written inside of commands.h, argument USE_LABELS) with my instruction. Instead of writing large if/else construction I have written a few code lines, so auto generation also saves a lot of time.
+In this case I compare only instructions that use labels (it is written inside of commands.h, argument USE_LABELS) with my instruction. Instead of writing large if/else construct I have written a few code lines, so auto generation also saves a lot of time.
 
 Unfortunately, such code generation dramatically reduces the level of code clarity and readability and therefore it's better to think twice before applying this trick.
